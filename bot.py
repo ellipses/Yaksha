@@ -19,10 +19,10 @@ class Bot(IRCClient):
     def signedOn(self):
         for channel in self.factory.channels:
             self.join(channel)
-        print 'Signed on as %s' % (self.nickname)
+        print ('Signed on as %s' % self.nickname)
 
     def joined(self, channel):
-        print 'Joined %s' % (channel)
+        print ('Joined %s' % channel)
 
     def privmsg(self, user, channel, message):
         if message == 'whens':
@@ -44,19 +44,19 @@ class BotFactory(protocol.ClientFactory):
         self.nickname = nickname
 
     def startedConnecting(self, connector):
-        print 'Started connecting'
+        print ('Started connecting')
 
     def clientConnectionFailed(self, connector, reason):
-        print 'Connection failed because of %s. Trying to reconnect' % (reason)
+        print ('Connection failed because of %s. Trying to reconnect' % reason)
         connector.connect()
 
     def clientConnectionLost(self, connector, reason):
-        print 'Connection failed because of %s. Trying to reconnect' % (reason)
+        print ('Connection failed because of %s. Trying to reconnect' % reason)
         connector.connect()
 
 
 def main():
-    print 'Starting up the bot.'
+    print ('Starting up the bot.')
     channels = ['tomtest']
     reactor.connectTCP('irc.quakenet.org', 6667,
                        BotFactory(channels))
