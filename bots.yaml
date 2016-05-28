@@ -1,6 +1,14 @@
 general:
 discord:
-    email:
+    email: 
     password: 
 twitch:
 irc:
+frinkiac:
+    # 31 * 200
+    max_timespan: 6200 
+    max_count: 31
+    interval: 300
+    api_url:
+    gif_url:
+    caption_url:
