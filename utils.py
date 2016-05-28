@@ -5,6 +5,7 @@ import base64
 import json
 import re
 
+
 class Streams():
 
     def __init__(self):
@@ -56,9 +57,9 @@ class Frinkiac():
         self.gif_url = 'https://frinkiac.com/gif/%s/%s/%s.gif'
         self.caption_url = 'https://frinkiac.com/gif/%s/%s/%s.gif?b64lines=%s'
         self.api_url = 'https://frinkiac.com/api/search?q=%s'
-        self.interval = 300
+        self.interval = 350
         self.max_count = 31
-        self.max_timespan = 6200 
+        self.max_timespan = 6200
         self.char_limit = 20
 
     def get_max_sequence(self, timestamps, debug=False):
@@ -87,11 +88,21 @@ class Frinkiac():
             print(timestamps)
             print('Selected')
             print(total_seqs)
-            print('length')
-            print(len(total_seqs))
 
         # Only return up to max count to stay under timelimit.
         return total_seqs[index][:self.max_count]
+
+    def get_episode(self, timestamps):
+        '''
+        Finds the most relevant episode for the given timestamps.
+        Current alogrythm works by selecting the episode that
+        has the longest sequence of consequtive timestamps
+        seperated by self.interval seconds.
+        '''
+        seq_list = [self.get_max_sequence(sorted(ts))
+                    for ep, ts in timestamps.items()]
+        seq_len = [len(seq) for seq in seq_list]
+        return list(timestamps)[seq_len.index(max(seq_len))]
 
     def get_timestamps(self, screencaps, debug=False):
         '''
@@ -113,13 +124,7 @@ class Frinkiac():
                 episodes[episode] = 1
                 timestamps[episode] = [timestamp]
 
-        # If the most common episode
-        # Get the first one if more than 1 exist.
-        max_count = max(episodes.values())
-        for name, count in episodes.items():
-            if count == max_count:
-                episode = name
-                break
+        episode = self.get_episode(timestamps)
 
         if debug:
             print('epside count')
@@ -130,7 +135,8 @@ class Frinkiac():
             print('timestamps')
             print(timestamps)
 
-        max_seq = self.get_max_sequence(sorted(timestamps[episode]), debug=debug)
+        max_seq = self.get_max_sequence(sorted(timestamps[episode]),
+                                        debug=debug)
         return episode, max_seq
 
     def format_message(self, message):
@@ -188,14 +194,17 @@ class Frinkiac():
             # requested.
             # caption = self.format_message(caption)
             encoded = str(base64.b64encode(str.encode(caption)), 'utf-8')
-            return self.caption_url % (episode, timestamps[0], timestamps[-1], encoded)
+            return self.caption_url % (episode, timestamps[0],
+                                       timestamps[-1], encoded)
         else:
             return self.gif_url % (episode, timestamps[0], timestamps[-1])
+
 
 class Boards():
 
     def __init__(self):
         pass
+
 
 class Arbitary():
 
