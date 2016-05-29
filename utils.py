@@ -1,9 +1,64 @@
 #!/usr/bin/python
+from datetime import datetime, timedelta
+from bs4 import BeautifulSoup
+from functools import wraps
 import requests
 import random
 import base64
+import yaml
 import json
+import time
 import re
+
+
+def rate_limit(time_gap=0):
+    '''
+    Decorator that limits how often a user can use
+    a function.
+    '''
+    _time = {}
+
+    def rate_decorator(func):
+        @wraps(func)
+        def func_wrapper(*args, **kwargs):
+
+            user = args[1]
+            # Use the combination of the users name and
+            # and function name for the key. Simple way of handling
+            # per user per function times.
+            hash_key = user + func.__name__
+            if hash_key in _time:
+
+                time_diff = time.time() - _time[hash_key]
+                if time_diff > time_gap:
+                    _time[hash_key] = time.time()
+                    return func(*args, **kwargs)
+                else:
+                    delta = timedelta(seconds=time_gap - time_diff)
+                    time_format = datetime(1, 1, 1) + delta
+                    return ("Nice try %s, but I've already done this for you. "
+                            'You can ask me again in %s days, %s hours, %s'
+                            ' minutes and %s seconds.') % (user,
+                                                           time_format.day - 1,
+                                                           time_format.hour,
+                                                           time_format.minute,
+                                                           time_format.second
+                                                           )
+
+            else:
+                _time[hash_key] = time.time()
+                return func(*args, **kwargs)
+
+        return func_wrapper
+    return rate_decorator
+
+
+def memonize(func):
+    '''
+    Decorator that memonizes the result of the function call
+    for the specified time period.
+    '''
+    pass
 
 
 class Streams():
@@ -203,13 +258,85 @@ class Frinkiac():
 class Boards():
 
     def __init__(self):
-        pass
+        self.url = ('http://www.boards.ie/search/submit/'
+                    '?forum=1204&subforums=1&sort=newest&date_to=&date_from='
+                    '&query=casuals')
+
+    def get_most_recent_thead(self):
+        '''
+        Use the search feature to find and return the link
+        for the most recent thread that was created.
+        '''
+        resp = requests.get(self.url)
+
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            return soup.find('div', class_='result_wrapper').find('a').get('href')
+        else:
+            return False
+
+    def find_posters(self, thread_url):
+        '''
+        Returns the names of all the posters in the thread
+        as a list of strings.
+        '''
+        resp = requests.get(thread_url)
+
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            posters = soup.find_all('a', class_='bigusername')
+
+            unique_posters = []
+            for poster in posters:
+                curr_poster = str(poster.contents[0])
+
+                # remove the <b> and </b> tags if they exist.
+                if '<b>' in curr_poster:
+                    curr_poster = curr_poster[3:-4]
+
+                if curr_poster not in unique_posters:
+                    unique_posters.append(curr_poster)
+
+            return unique_posters
+        else:
+            return False
+
+    def get_thread_posters(self):
+        '''
+        Main function thats called when trying to get a list of
+        people who have posted in the casuals thread.
+        '''
+        thread = self.get_most_recent_thead()
+        if thread:
+            posters = self.find_posters(thread)
+
+            if posters:
+
+                # Return the string after correctly formatting it for
+                # the number of posters.
+                if len(posters) == 1:
+                    formated_str = ('Only %s has posted in the most'
+                                    'recent casuals thread.')
+                else:
+                    formated_str = ['%s, 'for poster in
+                                    range(len(posters) - 1)]
+                    formated_str = ''.join(formated_str)
+                    formated_str += ('and %s have posted in the most recent'
+                                     ' casuals thread so far.')
+
+                return formated_str % tuple(posters)
+            else:
+                return ('Got an error when tryin to get a list of'
+                        'posters. :(')
+        else:
+            return ('Got an error when trying to find the most recent'
+                    'thread. :(')
 
 
 class Arbitary():
 
-    def __init__(self):
-        pass
+    def __init__(self, config):
+        self.config = config
 
     def shuffle(self, sentence, author):
         sentence = re.sub(r'\s\s+', ' ', sentence)
@@ -218,6 +345,13 @@ class Arbitary():
         if word_list == ['']:
             return "Look %s You can't expect me to shuffle nothing." % author
         elif len(word_list) == 1:
-            return 'Dont waste my time %s. Shuffling 1 word is pointless' % author
+            return ('Dont waste my time %s. '
+                    'Shuffling 1 word is pointless') % author
         else:
             return random.choice(word_list)
+
+    @rate_limit(60 * 60 * 24)  # 1 day
+    def skins(self, author):
+        skins_list = yaml.load(open('skins.yaml').read())
+        return random.choice(skins_list.split('\n'))
+

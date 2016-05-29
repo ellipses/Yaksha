@@ -38,6 +38,10 @@ async def on_message(message):
         await client.send_message(message.channel,
                                  'Added channel https://twitch.tv/%s' % channel)
 
+    elif message.content.startswith('!casuals'):
+        await client.send_message(message.channel,
+                                  client.boards.get_thread_posters())
+
     elif message.content.startswith('whens'):
         await client.send_message(message.channel,
                                   client.streams.display_stream_list())
@@ -54,33 +58,36 @@ async def on_message(message):
         print('caption')
         print(caption)
         await client.send_message(message.channel,
-                            client.frinkiac.get_gif(caption, debug=True))
+                                  client.frinkiac.get_gif(caption, debug=True))
 
     elif message.content.startswith('!simpsons'):
         caption = message.content[len('!simpsons') + 1:]
         await client.send_message(message.channel,
-                            client.frinkiac.get_gif(caption))
+                                  client.frinkiac.get_gif(caption))
 
     elif message.content.startswith('!shuffle'):
         sentence = message.content[len('!shuffle') + 1:]
         await client.send_message(message.channel,
-                            client.arbitary.shuffle(sentence, message.author.mention))
+                                  client.arbitary.shuffle(sentence, message.author.mention))
 
-    elif message.content.startswith('!sleep'):
-        await asyncio.sleep(5)
-        await client.send_message(message.channel, 'Done sleeping')
+    elif message.content.startswith('!skins'):
+        await client.send_message(message.channel, client.arbitary.skins(message.author.mention))
 
 
 def main():
     config_path = 'bots.yaml'
     config = yaml.load(open(config_path).read())
+
+    # Adding the classes that handle the various
+    # functions.
     client.streams = utils.Streams()
     client.frinkiac = utils.Frinkiac(config['frinkiac'])
-    client.arbitary = utils.Arbitary()
+    client.arbitary = utils.Arbitary(config['arbitary'])
+    client.boards = utils.Boards()
 
     email = config['discord']['email']
     password = config['discord']['password']
     client.run(email, password)
 
-if __name__ == '__main__' :
+if __name__ == '__main__':
     main()
