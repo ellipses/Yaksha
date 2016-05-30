@@ -11,7 +11,7 @@ import time
 import re
 
 
-def rate_limit(time_gap=0):
+def rate_limit(time_gap):
     '''
     Decorator that limits how often a user can use
     a function.
@@ -53,12 +53,32 @@ def rate_limit(time_gap=0):
     return rate_decorator
 
 
-def memonize(func):
+def memonize(cache_time):
     '''
     Decorator that memonizes the result of the function call
     for the specified time period.
     '''
-    pass
+    _cache = {}
+
+    def memonize_decorator(func):
+        @wraps(func)
+        def func_wrapper(*args, **kwargs):
+            if func in _cache:
+                stored_time = _cache[func][1]
+
+                if time.time() - stored_time > cache_time:
+                    returned_result = func(*args, **kwargs)
+                    _cache[func] = (returned_result, time.time())
+
+                return _cache[func][0]
+
+            else:
+                returned_result = func(*args, **kwargs)
+                _cache[func] = (returned_result, time.time())
+                return returned_result
+
+        return func_wrapper
+    return memonize_decorator
 
 
 class Streams():
@@ -147,7 +167,7 @@ class Frinkiac():
         # Only return up to max count to stay under timelimit.
         return total_seqs[index][:self.max_count]
 
-    def get_episode(self, timestamps):
+    def get_episode(self, timestamps, debug=False):
         '''
         Finds the most relevant episode for the given timestamps.
         Current alogrythm works by selecting the episode that
@@ -157,6 +177,12 @@ class Frinkiac():
         seq_list = [self.get_max_sequence(sorted(ts))
                     for ep, ts in timestamps.items()]
         seq_len = [len(seq) for seq in seq_list]
+
+        if debug:
+            print('seq list')
+            print(seq_list)
+            print('seq len')
+            print(seq_len)
         return list(timestamps)[seq_len.index(max(seq_len))]
 
     def get_timestamps(self, screencaps, debug=False):
@@ -179,7 +205,7 @@ class Frinkiac():
                 episodes[episode] = 1
                 timestamps[episode] = [timestamp]
 
-        episode = self.get_episode(timestamps)
+        episode = self.get_episode(timestamps, debug=debug)
 
         if debug:
             print('epside count')
@@ -262,6 +288,7 @@ class Boards():
                     '?forum=1204&subforums=1&sort=newest&date_to=&date_from='
                     '&query=casuals')
 
+    @memonize(60 * 60 * 24 * 3)
     def get_most_recent_thead(self):
         '''
         Use the search feature to find and return the link
@@ -275,6 +302,7 @@ class Boards():
         else:
             return False
 
+    @memonize(60 * 15)
     def find_posters(self, thread_url):
         '''
         Returns the names of all the posters in the thread
@@ -326,10 +354,10 @@ class Boards():
 
                 return formated_str % tuple(posters)
             else:
-                return ('Got an error when tryin to get a list of'
+                return ('Got an error when tryin to get a list of '
                         'posters. :(')
         else:
-            return ('Got an error when trying to find the most recent'
+            return ('Got an error when trying to find the most recent '
                     'thread. :(')
 
 
@@ -350,7 +378,7 @@ class Arbitary():
         else:
             return random.choice(word_list)
 
-    @rate_limit(60 * 60 * 24)  # 1 day
+    @rate_limit(60 * 60 * 24)
     def skins(self, author):
         skins_list = yaml.load(open('skins.yaml').read())
         return random.choice(skins_list.split('\n'))
