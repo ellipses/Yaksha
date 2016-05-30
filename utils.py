@@ -288,7 +288,7 @@ class Boards():
                     '?forum=1204&subforums=1&sort=newest&date_to=&date_from='
                     '&query=casuals')
 
-    @memonize(60 * 60 * 24 * 3)
+    @memonize(60 * 60)
     def get_most_recent_thead(self):
         '''
         Use the search feature to find and return the link
@@ -344,7 +344,7 @@ class Boards():
                 # the number of posters.
                 if len(posters) == 1:
                     formated_str = ('Only %s has posted in the most'
-                                    'recent casuals thread.')
+                                    ' recent casuals thread so far.')
                 else:
                     formated_str = ['%s, 'for poster in
                                     range(len(posters) - 1)]
@@ -382,4 +382,3 @@ class Arbitary():
     def skins(self, author):
         skins_list = yaml.load(open('skins.yaml').read())
         return random.choice(skins_list.split('\n'))
-
