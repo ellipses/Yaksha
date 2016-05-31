@@ -390,9 +390,52 @@ class Arbitary():
         skins_list = yaml.load(open('skins.yaml').read())
         return random.choice(skins_list.split('\n'))
 
-    @memoize(60 * 60 * 3)
+    def convert_times(self, times):
+        new_times = []
+        for prev_time in times:
+            new_time = (prev_time[3:5] + '/' + prev_time[:2] +
+                        ' - ' + prev_time[11:] + '/' + prev_time[8:10])
+            new_times.append(new_time)
+        return new_times
+
+    def remove_older_months(self, tourney_list):
+        '''
+        Deletes every month previous of the current one
+        from the tourney_list. 
+        '''
+        # Find the current month.
+        current_month = datetime.now().month
+        month_index = 0
+        for index in range(len(tourney_list)):
+            tourney = tourney_list[index]
+            first_date = tourney[1].contents[0]
+            if current_month == int(first_date[:2]):
+                month_index = index
+                break
+        del tourney_list[:month_index]
+        return tourney_list
+
+    def remove_older_days(self, tourney_list):
+        '''
+        Deletes every tourney entry from the current month
+        whos starting date was before today.
+        '''
+        curr_day = datetime.now().day
+        day_index = 0
+        for days in tourney_list[0][1::4]:
+            date = days.contents[0]
+            if int(date[3:5]) > curr_day:
+                break
+            day_index += 1
+
+        del tourney_list[0][:day_index * 4]
+        return tourney_list
+
+    @memoize(60 * 60 * 24)
     def get_tourneys(self):
         '''
+        Uses the list of tournaments on the srk page
+        to return the upcomming tournaments.
         '''
         resp = requests.get(self.tourney_url)
 
@@ -400,6 +443,9 @@ class Arbitary():
             soup = BeautifulSoup(resp.text, 'html.parser')
             soup = soup.find_all('tbody')
             tourney_list = [month.find_all('td') for month in soup]
+
+            tourney_list = self.remove_older_months(tourney_list)
+            tourney_list = self.remove_older_days(tourney_list)
             # Only care about first two months.
             tourneys = tourney_list[0] + tourney_list[1]
             # Only get the first 5 if there are more than 5.
@@ -411,12 +457,17 @@ class Arbitary():
             # Delete the links
             del tourney_list[3::4]
 
-            formated_str = ''.join([' %s (%s) [%s]  |  '
-                                    for index in range(
-                                        int(len(tourneys) / 4.0))])
+            # Convert the time format
+            names = [time for time in tourney_list[0::3]]
+            times = [time for time in tourney_list[1::3]]
+            locations = [time for time in tourney_list[2::3]]
 
-            formated_str = formated_str % tuple(tourney_list)
-            return 'The upcomming tourneys are ' + formated_str + ' .'
+            times = self.convert_times(times)
+            formated_tourneys = tuple(zip(names, times, locations))
+            formated_str = ''.join([' %s (%s) [%s]  |  ' % tourney for
+                                    tourney in formated_tourneys])
+
+            return 'The upcomming tourneys are ' + formated_str[:-4]
         else:
             return ('Got %s when trying to get list of'
                     ' tourneys') % resp.status_code
