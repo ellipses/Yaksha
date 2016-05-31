@@ -53,14 +53,14 @@ def rate_limit(time_gap):
     return rate_decorator
 
 
-def memonize(cache_time):
+def memoize(cache_time):
     '''
-    Decorator that memonizes the result of the function call
+    Decorator that memoizes the result of the function call
     for the specified time period.
     '''
     _cache = {}
 
-    def memonize_decorator(func):
+    def memoize_decorator(func):
         @wraps(func)
         def func_wrapper(*args, **kwargs):
             if func in _cache:
@@ -78,7 +78,7 @@ def memonize(cache_time):
                 return returned_result
 
         return func_wrapper
-    return memonize_decorator
+    return memoize_decorator
 
 
 class Streams():
@@ -258,7 +258,7 @@ class Frinkiac():
             print('response')
             print(screen_caps)
 
-        if len(screen_caps) == 1:
+        if len(screen_caps) <= 1:
             message = 'Try saying a line that actually exists.'
             return message
 
@@ -288,8 +288,8 @@ class Boards():
                     '?forum=1204&subforums=1&sort=newest&date_to=&date_from='
                     '&query=casuals')
 
-    @memonize(60 * 60)
-    def get_most_recent_thead(self):
+    @memoize(60 * 60)
+    def get_most_recent_thead(self, nocache=False):
         '''
         Use the search feature to find and return the link
         for the most recent thread that was created.
@@ -302,8 +302,8 @@ class Boards():
         else:
             return False
 
-    @memonize(60 * 15)
-    def find_posters(self, thread_url):
+    @memoize(60 * 15)
+    def find_posters(self, thread_url, nocache=False):
         '''
         Returns the names of all the posters in the thread
         as a list of strings.
@@ -352,7 +352,9 @@ class Boards():
                     formated_str += ('and %s have posted in the most recent'
                                      ' casuals thread so far.')
 
-                return formated_str % tuple(posters)
+                formated_str = formated_str % tuple(posters)
+                formated_str += ' %s ' % thread
+                return formated_str
             else:
                 return ('Got an error when tryin to get a list of '
                         'posters. :(')
@@ -365,8 +367,11 @@ class Arbitary():
 
     def __init__(self, config):
         self.config = config
+        self.tourney_url = 'http://shoryuken.com/tournament-calendar/'
 
     def shuffle(self, sentence, author):
+        '''
+        '''
         sentence = re.sub(r'\s\s+', ' ', sentence)
         word_list = sentence.split(' ')
 
@@ -380,5 +385,38 @@ class Arbitary():
 
     @rate_limit(60 * 60 * 24)
     def skins(self, author):
+        '''
+        '''
         skins_list = yaml.load(open('skins.yaml').read())
         return random.choice(skins_list.split('\n'))
+
+    @memoize(60 * 60 * 3)
+    def get_tourneys(self):
+        '''
+        '''
+        resp = requests.get(self.tourney_url)
+
+        if resp.status_code == 200:
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            soup = soup.find_all('tbody')
+            tourney_list = [month.find_all('td') for month in soup]
+            # Only care about first two months.
+            tourneys = tourney_list[0] + tourney_list[1]
+            # Only get the first 5 if there are more than 5.
+            if len(tourneys) > 20:
+                tourneys = tourneys[:20]
+
+            # Create lists of tourneys
+            tourney_list = [tourney.contents[0] for tourney in tourneys]
+            # Delete the links
+            del tourney_list[3::4]
+
+            formated_str = ''.join([' %s (%s) [%s]  |  '
+                                    for index in range(
+                                        int(len(tourneys) / 4.0))])
+
+            formated_str = formated_str % tuple(tourney_list)
+            return 'The upcomming tourneys are ' + formated_str + ' .'
+        else:
+            return ('Got %s when trying to get list of'
+                    ' tourneys') % resp.status_code

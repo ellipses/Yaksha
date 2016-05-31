@@ -70,6 +70,9 @@ async def on_message(message):
         await client.send_message(message.channel,
                                   client.arbitary.shuffle(sentence, message.author.mention))
 
+    elif message.content.startswith('!tourney'):
+        await client.send_message(message.channel,
+                                  client.arbitary.get_tourneys())
     elif message.content.startswith('!skins'):
         await client.send_message(message.channel, client.arbitary.skins(message.author.mention))
 
