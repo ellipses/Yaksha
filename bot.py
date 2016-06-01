@@ -1,14 +1,17 @@
 #!/usr/bin/python
 from twisted.internet import reactor, protocol
 from twisted.words.protocols.irc import IRCClient
-from utils import Streams
+import utils
 import re
 
 
 class Bot(IRCClient):
 
     def __init__(self):
-        self.stream = Streams()
+        self.frinkiac = utils.Frinkiac({})
+        self.arbitary = utils.Arbitary({})
+        self.gifs = utils.Gifs()
+        self.boards = utils.Boards()
         self.stream_re = r'^whens'
 
     def _get_nickname(self):
@@ -25,11 +28,25 @@ class Bot(IRCClient):
         print ('Joined %s' % channel)
 
     def privmsg(self, user, channel, message):
-        if message == 'whens':
-            self.msg(channel, self.stream.display_stream_list())
-        if re.match(r'^!add', message):
-            channel = re.search(r'^!add (\w+)', message).group(1)
-            self.stream.add_channel(channel)
+        if message[:9] == '!simpsons':
+            response = self.frinkiac.get_gif(message[9:])
+            self.msg(channel, response.encode('ascii', 'ignore'))
+
+        elif message[:8] == '!shuffle':
+            response = self.arbitary.shuffle(message[9:], user)
+            self.msg(channel, response.encode('ascii', 'ignore'))
+
+        elif message[:len('!gif')] == '!gif':
+            response = self.gifs.get_gif(message[len('!gif'):], user)
+            self.msg(channel, response.encode('ascii', 'ignore'))
+
+        elif message[:len('!casuals')] == '!casuals':
+            response = self.boards.get_thread_posters()
+            self.msg(channel, response.encode('ascii', 'ignore'))
+
+        elif message[:len('!tourney')] == '!tourney':
+            response = self.arbitary.get_tourneys()
+            self.msg(channel, response.encode('ascii', 'ignore'))
 
 
 class BotFactory(protocol.ClientFactory):
@@ -39,7 +56,7 @@ class BotFactory(protocol.ClientFactory):
 
     protocol = Bot
 
-    def __init__(self, channels, nickname='Makara'):
+    def __init__(self, channels, nickname='Yaksha'):
         self.channels = channels
         self.nickname = nickname
 
@@ -57,7 +74,7 @@ class BotFactory(protocol.ClientFactory):
 
 def main():
     print ('Starting up the bot.')
-    channels = ['tomtest']
+    channels = ['tomtest', 'sakurasf', 'irishfightinggames']
     reactor.connectTCP('irc.quakenet.org', 6667,
                        BotFactory(channels))
     reactor.run()
