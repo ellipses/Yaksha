@@ -65,6 +65,16 @@ async def on_message(message):
         await client.send_message(message.channel,
                                   client.frinkiac.get_gif(caption))
 
+    elif message.content.startswith('!gif'):
+        caption = message.content[len('!gif') + 1:]
+        await client.send_message(message.channel,
+                                  client.gifs.get_gif(caption, message.author.mention))
+
+    elif message.content.startswith('!testgif'):
+        caption = message.content[len('!testgif') + 1:]
+        await client.send_message(message.channel,
+                                  client.gifs.get_translate_gif(caption))
+
     elif message.content.startswith('!shuffle'):
         sentence = message.content[len('!shuffle') + 1:]
         await client.send_message(message.channel,
@@ -86,6 +96,7 @@ def main():
     client.streams = utils.Streams()
     client.frinkiac = utils.Frinkiac(config['frinkiac'])
     client.arbitary = utils.Arbitary(config['arbitary'])
+    client.gifs = utils.Gifs()
     client.boards = utils.Boards()
 
     email = config['discord']['email']

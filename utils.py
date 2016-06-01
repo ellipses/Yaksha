@@ -132,7 +132,7 @@ class Frinkiac():
         self.gif_url = 'https://frinkiac.com/gif/%s/%s/%s.gif'
         self.caption_url = 'https://frinkiac.com/gif/%s/%s/%s.gif?b64lines=%s'
         self.api_url = 'https://frinkiac.com/api/search?q=%s'
-        self.interval = 350
+        self.interval = 500
         self.max_count = 31
         self.max_timespan = 6200
         self.char_limit = 20
@@ -269,6 +269,10 @@ class Frinkiac():
         seq_length = len(timestamps)
         if seq_length <= 1:
             return 'Try fixing your quote'
+
+        # experimental stuff
+        if timestamps[-1] - timestamps[0] < 4000:
+            timestamps[-1] += 500
 
         if text:
             # Perform base 64 encoding if a captioned version of the gif was
@@ -471,3 +475,35 @@ class Arbitary():
         else:
             return ('Got %s when trying to get list of'
                     ' tourneys') % resp.status_code
+
+
+class Gifs():
+
+    def __init__(self):
+        self.search_url = ('http://api.giphy.com/v1/gifs/search?q='
+                           '%s&api_key=dc6zaTOxFJmzC')
+        self.translate_url = ('http://api.giphy.com/v1/gifs/translate?s='
+                              '%s&api_key=dc6zaTOxFJmzC')
+
+    def get_gif(self, quote, author):
+        query = '+'.join(quote.split(' '))
+        resp = requests.get(self.search_url % query)
+
+        if resp.status_code == 200:
+            gifs = resp.json()['data'][:5]
+            if len(gifs) == 0:
+                return "Sorry %s I could not find any gifs using that keyword. :( ." % author
+            urls = [gif['url'] for gif in gifs]
+            return random.choice(urls)
+        else:
+            return 'Got an error when searching for gifs :('
+
+    def get_translate_gif(self, quote):
+        query = '+'.join(quote.split(' '))
+        resp = requests.get(self.translate_url % query)
+
+        if resp.status_code == 200:
+            return resp.json()['data']['url']
+        else:
+            return ('Got an error when trying find a translate gif :(.'
+                    ' What does this even do anyway')
