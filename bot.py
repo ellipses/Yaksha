@@ -2,17 +2,28 @@
 from twisted.internet import reactor, protocol
 from twisted.words.protocols.irc import IRCClient
 import utils
-import re
+import yaml
 
 
 class Bot(IRCClient):
 
     def __init__(self):
-        self.frinkiac = utils.Frinkiac({})
-        self.arbitary = utils.Arbitary({})
-        self.gifs = utils.Gifs()
-        self.boards = utils.Boards()
-        self.stream_re = r'^whens'
+        config_path = 'bots.yaml'
+        config = yaml.load(open(config_path).read())
+
+        frinkiac = utils.Frinkiac()
+        arbitary = utils.Arbitary()
+        gifs = utils.Gifs()
+        boards = utils.Boards()
+
+        self.simpsons_gif = frinkiac.get_gif
+        self.shuffle = arbitary.shuffle
+        self.casuals = boards.get_thread_posters
+        self.tourney = arbitary.get_tourneys
+        self.giffy_gif = gifs.get_gif
+
+        self.commands = config['common-actions']
+        self.commands.update(config['irc-actions'])
 
     def _get_nickname(self):
         return self.factory.nickname
@@ -28,25 +39,12 @@ class Bot(IRCClient):
         print ('Joined %s' % channel)
 
     def privmsg(self, user, channel, message):
-        if message[:9] == '!simpsons':
-            response = self.frinkiac.get_gif(message[9:])
-            self.msg(channel, response.encode('ascii', 'ignore'))
-
-        elif message[:8] == '!shuffle':
-            response = self.arbitary.shuffle(message[9:], user)
-            self.msg(channel, response.encode('ascii', 'ignore'))
-
-        elif message[:len('!gif')] == '!gif':
-            response = self.gifs.get_gif(message[len('!gif'):], user)
-            self.msg(channel, response.encode('ascii', 'ignore'))
-
-        elif message[:len('!casuals')] == '!casuals':
-            response = self.boards.get_thread_posters()
-            self.msg(channel, response.encode('ascii', 'ignore'))
-
-        elif message[:len('!tourney')] == '!tourney':
-            response = self.arbitary.get_tourneys()
-            self.msg(channel, response.encode('ascii', 'ignore'))
+        for command in self.commands.keys():
+            if message.startswith(command):
+                message = message[len(command):].strip()
+                response = getattr(self, self.commands[command])(message, user)
+                self.msg(channel, response.encode('ascii', 'ignore'))
+                break
 
 
 class BotFactory(protocol.ClientFactory):
@@ -56,7 +54,7 @@ class BotFactory(protocol.ClientFactory):
 
     protocol = Bot
 
-    def __init__(self, channels, nickname='Yaksha'):
+    def __init__(self, channels, nickname='Yaksha-staging'):
         self.channels = channels
         self.nickname = nickname
 
@@ -74,7 +72,7 @@ class BotFactory(protocol.ClientFactory):
 
 def main():
     print ('Starting up the bot.')
-    channels = ['tomtest', 'sakurasf', 'irishfightinggames']
+    channels = ['tomtest']
     reactor.connectTCP('irc.quakenet.org', 6667,
                        BotFactory(channels))
     reactor.run()

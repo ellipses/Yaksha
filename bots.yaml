@@ -1,4 +1,3 @@
-general:
 discord:
     email: 
     password: 
@@ -14,4 +13,11 @@ frinkiac:
     caption_url:
 arbitary:
   skins: filename
+actions:
+  '!simpsons': 'simpsons_gif'
+  '!shuffle': 'shuffle'
+  '!tourney': 'tourney'
+  '!casuals': 'casuals'
+  '!gif': 'giffy_gif'
+
 

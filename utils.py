@@ -22,7 +22,7 @@ def rate_limit(time_gap):
         @wraps(func)
         def func_wrapper(*args, **kwargs):
 
-            user = args[1]
+            user = args[2]
             # Use the combination of the users name and
             # and function name for the key. Simple way of handling
             # per user per function times.
@@ -127,7 +127,7 @@ class Streams():
 
 class Frinkiac():
 
-    def __init__(self, config):
+    def __init__(self, config={}):
         # gif/episode/start_timestamp/end_timestamp.gif?b64lines=caption_in_base64
         self.gif_url = 'https://frinkiac.com/gif/%s/%s/%s.gif'
         self.caption_url = 'https://frinkiac.com/gif/%s/%s/%s.gif?b64lines=%s'
@@ -238,7 +238,7 @@ class Frinkiac():
 
         return formated_msg
 
-    def get_gif(self, caption, text=False, debug=False):
+    def get_gif(self, caption, user, text=False, debug=False):
         '''
         Main function that called to retreive a gif url.
 
@@ -333,7 +333,7 @@ class Boards():
         else:
             return False
 
-    def get_thread_posters(self):
+    def get_thread_posters(self, *args, **kwargs):
         '''
         Main function thats called when trying to get a list of
         people who have posted in the casuals thread.
@@ -369,7 +369,7 @@ class Boards():
 
 class Arbitary():
 
-    def __init__(self, config):
+    def __init__(self, config={}):
         self.config = config
         self.tourney_url = 'http://shoryuken.com/tournament-calendar/'
 
@@ -388,7 +388,7 @@ class Arbitary():
             return random.choice(word_list)
 
     @rate_limit(60 * 60 * 24)
-    def skins(self, author):
+    def skins(self, message, author):
         '''
         '''
         skins_list = yaml.load(open('skins.yaml').read())
@@ -405,7 +405,7 @@ class Arbitary():
     def remove_older_months(self, tourney_list):
         '''
         Deletes every month previous of the current one
-        from the tourney_list. 
+        from the tourney_list.
         '''
         # Find the current month.
         current_month = datetime.now().month
@@ -436,7 +436,7 @@ class Arbitary():
         return tourney_list
 
     @memoize(60 * 60 * 24)
-    def get_tourneys(self):
+    def get_tourneys(self, message, author):
         '''
         Uses the list of tournaments on the srk page
         to return the upcomming tournaments.
@@ -498,7 +498,7 @@ class Gifs():
         else:
             return 'Got an error when searching for gifs :('
 
-    def get_translate_gif(self, quote):
+    def get_translate_gif(self, quote, author):
         query = '+'.join(quote.split(' '))
         resp = requests.get(self.translate_url % query)
 
