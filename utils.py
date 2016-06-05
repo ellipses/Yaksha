@@ -87,9 +87,10 @@ class Streams():
         self.file = 'channel.txt'
         self.api_prefix = 'https://api.twitch.tv/kraken/streams/?channel='
 
-    def add_channel(self, channel_name):
+    def add_channel(self, msg, user):
         with open(self.file, 'a') as file:
-            file.write(' %s ' % channel_name)
+            file.write(' %s ' % msg)
+        return 'Added channel %s' % msg
 
     def get_channels(self):
         with open(self.file, 'r') as file:
@@ -112,7 +113,7 @@ class Streams():
 
         return message
 
-    def display_stream_list(self):
+    def display_stream_list(self, msg, user):
         channels = self.get_channels()
         channel_list = (',').join(channels.split(' '))
 
@@ -134,8 +135,10 @@ class Frinkiac():
         self.api_url = 'https://frinkiac.com/api/search?q=%s'
         self.interval = 500
         self.max_count = 31
-        self.max_timespan = 6200
+        self.max_timespan = 6800
         self.char_limit = 20
+        self.extend_regex = r'^-ex(\d?\.?\d?)?'
+        self.max_extend = 6.9
 
     def get_max_sequence(self, timestamps, debug=False):
         '''
@@ -229,7 +232,7 @@ class Frinkiac():
         # Iterate thr
         char_buff = 0
         formated_msg = ''
-        for word in message:
+        for word in message.split(' '):
             char_buff += len(word)
             formated_msg += ' %s' % word
             if char_buff >= 20:
@@ -238,7 +241,58 @@ class Frinkiac():
 
         return formated_msg
 
-    def get_gif(self, caption, user, text=False, debug=False):
+    def handle_caption(self, caption):
+        '''
+        '''
+        extend = False
+        extend_amount = self.max_extend
+        result = re.search(self.extend_regex, caption)
+        caption = re.sub(self.extend_regex, '', caption).strip()
+        # Matched an extend command at the start
+        if result:
+            extend = True
+            # Matched a value attached to extend
+            if result.group(1):
+                extend_value = float(result.group(1))
+
+                # Only change the default extend value if they passed in
+                # valid values.
+                if extend_value <= self.max_extend and extend_value > 0:
+                    extend_amount = extend_value
+
+        # Hit the api endpoint to get a list of screencaps
+        # that are relevant to the caption.
+        response = requests.get(self.api_url % caption)
+        screen_caps = json.loads(response.text)
+
+        if len(screen_caps) <= 1:
+            return False
+
+        # Find the most common episode and longest sequence of
+        # timestamps.
+        episode, timestamps = self.get_timestamps(screen_caps)
+
+        seq_length = len(timestamps)
+        if seq_length <= 1:
+            return False
+
+        if extend:
+            # Convert it to seconds and cast to int to truncate
+            # decimal values.
+            extend_amount = int(extend_amount * 1000)
+            # Make sure we stay under the gif time limit
+            # even after extending.
+            difference = timestamps[-1] - timestamps[0]
+            extendable_amount = self.max_timespan - difference
+
+            if extend_amount > extendable_amount:
+                extend_amount = extendable_amount
+
+            timestamps[-1] = timestamps[-1] + extend_amount
+
+        return (episode, timestamps, caption)
+
+    def get_gif(self, caption, user, text=False):
         '''
         Main function that called to retreive a gif url.
 
@@ -247,42 +301,25 @@ class Frinkiac():
             text: Controls wether the generated gif will contain
                   the caption.
         '''
-        # Hit the api endpoint to get a list of screencaps
-        # that are relevant to the caption.
-        response = requests.get(self.api_url % caption)
-        screen_caps = json.loads(response.text)
+        resp = self.handle_caption(caption)
+        if not resp:
+            return 'Try fixing your quote.'
+        episode, timestamps, caption = resp
+        return self.gif_url % (episode,
+                               timestamps[0], timestamps[-1])
 
-        if debug:
-            print('search url')
-            print(self.api_url % caption)
-            print('response')
-            print(screen_caps)
+    def get_captioned_gif(self, caption, user):
+        '''
+        '''
+        resp = self.handle_caption(caption)
+        if not resp:
+            return 'Try fixing your quote.'
 
-        if len(screen_caps) <= 1:
-            message = 'Try saying a line that actually exists.'
-            return message
-
-        # Find the most common episode and longest sequence of
-        # timestamps.
-        episode, timestamps = self.get_timestamps(screen_caps, debug=debug)
-
-        seq_length = len(timestamps)
-        if seq_length <= 1:
-            return 'Try fixing your quote'
-
-        # experimental stuff
-        if timestamps[-1] - timestamps[0] < 4000:
-            timestamps[-1] += 500
-
-        if text:
-            # Perform base 64 encoding if a captioned version of the gif was
-            # requested.
-            # caption = self.format_message(caption)
-            encoded = str(base64.b64encode(str.encode(caption)), 'utf-8')
-            return self.caption_url % (episode, timestamps[0],
-                                       timestamps[-1], encoded)
-        else:
-            return self.gif_url % (episode, timestamps[0], timestamps[-1])
+        episode, timestamps, caption = resp
+        # caption = self.format_message(caption)
+        encoded = str(base64.b64encode(str.encode(caption)), 'utf-8')
+        return self.caption_url % (episode, timestamps[0],
+                                   timestamps[-1], encoded)
 
 
 class Boards():
@@ -394,6 +431,9 @@ class Arbitary():
         skins_list = yaml.load(open('skins.yaml').read())
         return random.choice(skins_list.split('\n'))
 
+    def overwatch(self, message, author):
+        return 'http://i.imgur.com/DUz6N7k.jpg'
+
     def convert_times(self, times):
         new_times = []
         for prev_time in times:
@@ -492,7 +532,7 @@ class Gifs():
         if resp.status_code == 200:
             gifs = resp.json()['data'][:5]
             if len(gifs) == 0:
-                return "Sorry %s I could not find any gifs using that keyword. :( ." % author
+                return "Sorry %s I could not find any gifs using that keyword :( ." % author
             urls = [gif['url'] for gif in gifs]
             return random.choice(urls)
         else:

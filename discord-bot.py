@@ -32,72 +32,46 @@ async def on_message(message):
 
     !simpsons caption: Returns a gif from Frinkiac containing the caption.
     '''
-    if message.content.startswith('!add'):
-        channel = re.search(r'^!add (\w+)', message.content).group(1)
-        client.streams.add_channel(channel)
-        await client.send_message(message.channel,
-                                 'Added channel https://twitch.tv/%s' % channel)
+    for command in client.commands.keys():
+        msg = message.content
+        user = message.author.mention
+        if msg.startswith(command):
+            msg = msg[len(command):].strip()
+            response = getattr(client, client.commands[command])(msg, user)
+            await client.send_message(message.channel, response)
+            break
 
-    elif message.content.startswith('!casuals'):
-        await client.send_message(message.channel,
-                                  client.boards.get_thread_posters())
 
-    elif message.content.startswith('whens'):
-        await client.send_message(message.channel,
-                                  client.streams.display_stream_list())
+def add_functions(config):
+    '''
+    '''
+    streams = utils.Streams()
+    frinkiac = utils.Frinkiac()
+    gifs = utils.Gifs()
+    arbitary = utils.Arbitary()
+    boards = utils.Boards()
 
-    elif message.content.startswith('!simpsonscaption'):
-        caption = message.content[len('!simpsonscaption') + 1:]
-        await client.send_message(message.channel,
-                            client.frinkiac.get_gif(caption, text=True))
+    client.simpsons_gif = frinkiac.get_gif
+    client.captioned_gif = frinkiac.get_captioned_gif
+    client.shuffle = arbitary.shuffle
+    client.casuals = boards.get_thread_posters
+    client.tourney = arbitary.get_tourneys
+    client.giffy_gif = gifs.get_gif
 
-    elif message.content.startswith('!simpsonsdebug'):
-        caption = message.content[len('!simpsonsdebug') + 1:]
-        print('received msg')
-        print(message.content)
-        print('caption')
-        print(caption)
-        await client.send_message(message.channel,
-                                  client.frinkiac.get_gif(caption, debug=True))
+    client.translate_gif = gifs.get_translate_gif
+    client.skins = arbitary.skins
+    client.whens = streams.display_stream_list
+    client.add_stream = streams.add_channel
+    client.overwatch = arbitary.overwatch
 
-    elif message.content.startswith('!simpsons'):
-        caption = message.content[len('!simpsons') + 1:]
-        await client.send_message(message.channel,
-                                  client.frinkiac.get_gif(caption))
-
-    elif message.content.startswith('!gif'):
-        caption = message.content[len('!gif') + 1:]
-        await client.send_message(message.channel,
-                                  client.gifs.get_gif(caption, message.author.mention))
-
-    elif message.content.startswith('!testgif'):
-        caption = message.content[len('!testgif') + 1:]
-        await client.send_message(message.channel,
-                                  client.gifs.get_translate_gif(caption))
-
-    elif message.content.startswith('!shuffle'):
-        sentence = message.content[len('!shuffle') + 1:]
-        await client.send_message(message.channel,
-                                  client.arbitary.shuffle(sentence, message.author.mention))
-
-    elif message.content.startswith('!tourney'):
-        await client.send_message(message.channel,
-                                  client.arbitary.get_tourneys())
-    elif message.content.startswith('!skins'):
-        await client.send_message(message.channel, client.arbitary.skins(message.author.mention))
+    client.commands = config['common-actions']
+    client.commands.update(config['discord-actions'])
 
 
 def main():
     config_path = 'bots.yaml'
     config = yaml.load(open(config_path).read())
-
-    # Adding the classes that handle the various
-    # functions.
-    client.streams = utils.Streams()
-    client.frinkiac = utils.Frinkiac(config['frinkiac'])
-    client.arbitary = utils.Arbitary(config['arbitary'])
-    client.gifs = utils.Gifs()
-    client.boards = utils.Boards()
+    add_functions(config)
 
     email = config['discord']['email']
     password = config['discord']['password']
