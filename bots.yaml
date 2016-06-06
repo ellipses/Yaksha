@@ -1,6 +1,8 @@
 discord:
     email: 
-    password: 
+    password:
+frame_data:
+  url: 
 twitch:
 irc:
 frinkiac:
@@ -13,11 +15,13 @@ frinkiac:
     caption_url:
 arbitary:
   skins: filename
-actions:
+common-actions:
   '!simpsons': 'simpsons_gif'
   '!shuffle': 'shuffle'
   '!tourney': 'tourney'
   '!casuals': 'casuals'
   '!gif': 'giffy_gif'
-
+  '!frames': 'get_frames'
+irc-actions:
+discord-actions:
 

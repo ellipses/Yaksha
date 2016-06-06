@@ -15,15 +15,17 @@ class Bot(IRCClient):
         arbitary = utils.Arbitary()
         gifs = utils.Gifs()
         boards = utils.Boards()
+        frames = utils.Frames(config['frame_data'])
 
         self.simpsons_gif = frinkiac.get_gif
         self.shuffle = arbitary.shuffle
         self.casuals = boards.get_thread_posters
         self.tourney = arbitary.get_tourneys
         self.giffy_gif = gifs.get_gif
+        self.get_frames = frames.get_frames
 
         self.commands = config['common-actions']
-        self.commands.update(config['irc-actions'])
+        #self.commands.update(config['irc-actions'])
 
     def _get_nickname(self):
         return self.factory.nickname
