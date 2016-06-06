@@ -318,7 +318,7 @@ class Frinkiac():
 
         episode, timestamps, caption = resp
         # caption = self.format_message(caption)
-        encoded = str(base64.b64encode(str.encode(caption)), 'utf-8')
+        encoded = str(base64.b64encode(str.encode(caption)))
         return self.caption_url % (episode, timestamps[0],
                                    timestamps[-1], encoded)
 
@@ -561,8 +561,8 @@ class Frames():
                               'st': 'stand ',
                               'jp': 'jump '}
         self.short_regex = r'(^cr(\s|\.))|(^st(\s|\.))|(^jp(\s|\.))'
-        self.output_format = ('%s %s Startup: %s Active: %s Recovery: %s '
-                              'On Hit: %s On Block: %s')
+        self.output_format = ('%s - (%s) - [Startup]: %s [Active]: %s [Recovery]: %s '
+                              '[On Hit]: %s [On Block]: %s')
 
     @memoize(60 * 60 * 24 * 7)
     def get_data(self):
