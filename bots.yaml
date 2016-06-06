@@ -17,6 +17,7 @@ arbitary:
   skins: filename
 common-actions:
   '!simpsons': 'simpsons_gif'
+  '!scaption': 'captioned_gif'
   '!shuffle': 'shuffle'
   '!tourney': 'tourney'
   '!casuals': 'casuals'
@@ -24,4 +25,10 @@ common-actions:
   '!frames': 'get_frames'
 irc-actions:
 discord-actions:
-
+  '!tgif': 'translate_gif' 
+  '!skins': 'skins'
+  '!whens': 'whens'
+  '!add': 'add_stream'
+  '!overwatch': 'overwatch'
+  '!playofthegame': 'overwatch'
+discord-actions:
