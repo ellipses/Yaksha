@@ -50,7 +50,9 @@ def add_functions(config):
     gifs = utils.Gifs()
     arbitary = utils.Arbitary()
     boards = utils.Boards()
+    frames = utils.Frames(config['frame_data'])
 
+    client.get_frames = frames.get_frames
     client.simpsons_gif = frinkiac.get_gif
     client.captioned_gif = frinkiac.get_captioned_gif
     client.shuffle = arbitary.shuffle

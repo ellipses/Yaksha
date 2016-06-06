@@ -318,7 +318,10 @@ class Frinkiac():
 
         episode, timestamps, caption = resp
         # caption = self.format_message(caption)
-        encoded = str(base64.b64encode(str.encode(caption)))
+        try:
+            encoded = str(base64.b64encode(str.encode(caption)), 'utf-8')
+        except TypeError:
+            encoded = str(base64.b64encode(str.encode(caption)))
         return self.caption_url % (episode, timestamps[0],
                                    timestamps[-1], encoded)
 
