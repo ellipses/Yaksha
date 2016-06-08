@@ -343,7 +343,12 @@ class Boards():
 
         if resp.status_code == 200:
             soup = BeautifulSoup(resp.text, 'html.parser')
-            return soup.find('div', class_='result_wrapper').find('a').get('href')
+
+            # Make sure the thread title contains the word casual because the
+            # search can sometimes match the word 'casuals' in a thread post.
+            for thread in soup.findAll('div', class_='result_wrapper'):
+                if 'casual' in thread.find('a').contents[0].lower():
+                    return thread.find('a').get('href')
         else:
             return False
 

@@ -1,6 +1,6 @@
 discord:
     email: 
-    password:
+    password: 
 frame_data:
   url: 
 twitch:
@@ -31,4 +31,3 @@ discord-actions:
   '!add': 'add_stream'
   '!overwatch': 'overwatch'
   '!playofthegame': 'overwatch'
-discord-actions:
