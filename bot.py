@@ -33,7 +33,8 @@ class Bot(IRCClient):
         gifs = utils.Gifs()
         boards = utils.Boards()
         frames = utils.Frames(config['frame_data'])
-	
+	commands = utils.AddCommands(config['add_commands']['irc'])	
+
         self.simpsons_gif = frinkiac.get_gif
         self.captioned_gif = frinkiac.get_captioned_gif
         self.shuffle = arbitary.shuffle
@@ -41,6 +42,8 @@ class Bot(IRCClient):
         self.tourney = arbitary.get_tourneys
         self.giffy_gif = gifs.get_gif
         self.get_frames = frames.get_frames
+	self.add_command = commands.add_command
+	self.get_command = commands.get_command
 
         self.commands = config['common-actions']
         # self.commands.update(config['irc-actions'])
@@ -75,7 +78,7 @@ class Bot(IRCClient):
                     self.msg(channel, response.encode('ascii', 'ignore'))
                     break
             user = user.split('!', 1)[0]
-            self.loggers[channel[1:]].log("<%s> %s" % (user, message))
+            self.loggers[channel[1:].lower()].log("<%s> %s" % (user, message))
 
 
 class BotFactory(protocol.ClientFactory):
@@ -103,7 +106,7 @@ class BotFactory(protocol.ClientFactory):
 
 def main():
     print ('Starting up the bot.')
-    channels = ['tomtest', 'sakurasf', 'irishfightinggames']
+    channels = ['tomtest']
     reactor.connectTCP('irc.quakenet.org', 6667,
                        BotFactory(channels))
     reactor.run()

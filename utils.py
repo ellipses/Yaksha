@@ -708,7 +708,7 @@ class Frames():
 class AddCommands():
 
     def __init__(self, config={}):
-        self.file = 'additional_commands.txt'
+        self.file = config['file']
 
     def save_command(self, command, actions):
         with open(self.file, 'a') as file:

@@ -1,6 +1,6 @@
 discord:
     email: 
-    password:
+    password: 
 frame_data:
   url: 
 twitch:
@@ -13,6 +13,11 @@ frinkiac:
     api_url:
     gif_url:
     caption_url:
+add_commands:
+    irc:
+        file: irc_additional_commands.txt
+    discord:
+        file: additional_commands.txt
 arbitary:
   skins: filename
 common-actions:
@@ -23,11 +28,11 @@ common-actions:
   '!casuals': 'casuals'
   '!gif': 'giffy_gif'
   '!frames': 'get_frames'
+  '!add_cmd': 'add_command'
+  'Yaksha: get': 'get_command'
 irc-actions:
 discord-actions:
   '!tgif': 'translate_gif' 
   '!skins': 'skins'
   '!whens': 'whens'
   '!add_channel': 'add_stream'
-  '!add_cmd': 'add_command'
-  'Yaksha: get': 'get_command'
