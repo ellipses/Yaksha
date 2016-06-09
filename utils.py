@@ -10,6 +10,7 @@ import yaml
 import json
 import time
 import re
+import os
 
 
 def rate_limit(time_gap):
@@ -440,9 +441,6 @@ class Arbitary():
         skins_list = yaml.load(open('skins.yaml').read())
         return random.choice(skins_list.split('\n'))
 
-    def overwatch(self, message, author):
-        return 'http://i.imgur.com/DUz6N7k.jpg'
-
     def convert_times(self, times):
         new_times = []
         for prev_time in times:
@@ -705,3 +703,60 @@ class Frames():
         else:
             char, move, data = matched_value
             return self.format_output(char, move, vtrigger, data)
+
+
+class AddCommands():
+
+    def __init__(self, config={}):
+        self.file = 'additional_commands.txt'
+
+    def save_command(self, command, actions):
+        with open(self.file, 'a') as file:
+            json.dump({command: actions}, file)
+            file.write(os.linesep)
+        return True
+
+    def load_command(self, msg):
+        '''
+        switch to read indead to readlines.stoping in memeory bad when too big
+        '''
+        with open(self.file, 'r') as file:
+            command_list = file.readlines()
+
+        for command in command_list:
+            saved_cmd = json.loads(command)
+
+            for cmd in saved_cmd:
+                if cmd == msg:
+                    value = saved_cmd[cmd]
+                    if len(value) > 1:
+                        return random.choice(value)
+                    else:
+                        return value[0]
+        return False
+
+    def get_command(self, msg, user):
+        '''
+        '''
+        # They might've sent multiple commands but
+        # we only care about the first one.
+        cmd = msg.split(' ')[0]
+        resp = self.load_command(cmd)
+        if resp:
+            return resp
+        else:
+            return 'I am too sleepy to write reasonable error message, just stop doing wrong things.'
+
+    def add_command(self, msg, user):
+        '''
+        Main function that called when a user
+        tries to add a new command.
+        '''
+        split_msg = msg.split(' ')
+        command = split_msg[0]
+        actions = split_msg[1:]
+        if self.save_command(command, actions):
+            return 'The command %s has been added.' % command
+        else:
+            return 'some error check traceback, too sleepy to write sensible error message'
+

@@ -35,12 +35,11 @@ async def on_message(message):
     for command in client.commands.keys():
         msg = message.content
         user = message.author.mention
-        if msg.startswith(command):
+        if msg.lower().startswith(command.lower()):
             msg = msg[len(command):].strip()
             response = getattr(client, client.commands[command])(msg, user)
             await client.send_message(message.channel, response)
             break
-
 
 def add_functions(config):
     '''
@@ -51,6 +50,7 @@ def add_functions(config):
     arbitary = utils.Arbitary()
     boards = utils.Boards()
     frames = utils.Frames(config['frame_data'])
+    commands = utils.AddCommands()
 
     client.get_frames = frames.get_frames
     client.simpsons_gif = frinkiac.get_gif
@@ -64,7 +64,8 @@ def add_functions(config):
     client.skins = arbitary.skins
     client.whens = streams.display_stream_list
     client.add_stream = streams.add_channel
-    client.overwatch = arbitary.overwatch
+    client.add_command = commands.add_command
+    client.get_command = commands.get_command
 
     client.commands = config['common-actions']
     client.commands.update(config['discord-actions'])

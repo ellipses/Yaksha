@@ -1,6 +1,6 @@
 discord:
     email: 
-    password: 
+    password:
 frame_data:
   url: 
 twitch:
@@ -28,6 +28,6 @@ discord-actions:
   '!tgif': 'translate_gif' 
   '!skins': 'skins'
   '!whens': 'whens'
-  '!add': 'add_stream'
-  '!overwatch': 'overwatch'
-  '!playofthegame': 'overwatch'
+  '!add_channel': 'add_stream'
+  '!add_cmd': 'add_command'
+  'Yaksha: get': 'get_command'
