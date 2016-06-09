@@ -318,7 +318,10 @@ class Frinkiac():
 
         episode, timestamps, caption = resp
         # caption = self.format_message(caption)
-        encoded = str(base64.b64encode(str.encode(caption)), 'utf-8')
+        try:
+            encoded = str(base64.b64encode(str.encode(caption)), 'utf-8')
+        except TypeError:
+            encoded = str(base64.b64encode(str.encode(caption)))
         return self.caption_url % (episode, timestamps[0],
                                    timestamps[-1], encoded)
 
@@ -340,7 +343,12 @@ class Boards():
 
         if resp.status_code == 200:
             soup = BeautifulSoup(resp.text, 'html.parser')
-            return soup.find('div', class_='result_wrapper').find('a').get('href')
+
+            # Make sure the thread title contains the word casual because the
+            # search can sometimes match the word 'casuals' in a thread post.
+            for thread in soup.findAll('div', class_='result_wrapper'):
+                if 'casual' in thread.find('a').contents[0].lower():
+                    return thread.find('a').get('href')
         else:
             return False
 
@@ -561,8 +569,8 @@ class Frames():
                               'st': 'stand ',
                               'jp': 'jump '}
         self.short_regex = r'(^cr(\s|\.))|(^st(\s|\.))|(^jp(\s|\.))'
-        self.output_format = ('%s %s Startup: %s Active: %s Recovery: %s '
-                              'On Hit: %s On Block: %s')
+        self.output_format = ('%s - (%s) - [Startup]: %s [Active]: %s [Recovery]: %s '
+                              '[On Hit]: %s [On Block]: %s')
 
     @memoize(60 * 60 * 24 * 7)
     def get_data(self):
