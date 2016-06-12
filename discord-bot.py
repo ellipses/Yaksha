@@ -50,7 +50,7 @@ def add_functions(config):
     arbitary = utils.Arbitary()
     boards = utils.Boards()
     frames = utils.Frames(config['frame_data'])
-    commands = utils.AddCommands()
+    commands = utils.AddCommands(config['add_commands']['discord'])
 
     client.get_frames = frames.get_frames
     client.simpsons_gif = frinkiac.get_gif

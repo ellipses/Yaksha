@@ -71,7 +71,7 @@ class Bot(IRCClient):
                                " play with the group"))
         else:
             for command in self.commands.keys():
-                if message.startswith(command):
+                if message.lower().startswith(command.lower()):
                     message = message[len(command):].strip()
                     response = getattr(self, self.commands[command])(message,
                                                                      user)
