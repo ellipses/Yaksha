@@ -4,6 +4,7 @@ from fuzzywuzzy import process
 from bs4 import BeautifulSoup
 from functools import wraps
 import requests
+import asyncio
 import random
 import base64
 import yaml
@@ -760,3 +761,101 @@ class AddCommands():
         else:
             return 'some error check traceback, too sleepy to write sensible error message'
 
+
+class Voting():
+
+    def __init__(self):
+        # Match a number at the start of the message.
+        # Being a float is optional.
+        self.length_re = r'--((\d*)?(\.\d*)?)'
+        # Match and capture message in square bracket.
+        self.options_re = r'\[(.+)\]'
+        self.vote_length = 10
+        self.default_option = {'yes': 0, 'no': 0}
+        self.active_votes = {}
+
+    def process_message(self, msg, regex):
+        '''
+        Applies the regex and removes the matched
+        elements from the message.
+        Returns the matched group.
+        '''
+        result = re.search(regex, msg)
+        if result:
+            msg = re.sub(regex, '', msg).strip()
+            return result.group(0)
+        else:
+            return False
+
+    def handle_input(self, msg):
+        '''
+        Parses the supplied message to determine the vote
+        length and supplied parameteres(if any).
+        '''
+        # Check if the user supplied a length
+        matched_length = self.process_message(msg, self.length_re)
+        if matched_length:
+            # start at the second index to avoid the -- at the start
+            # of the time parameter.
+            vote_length = int(matched_length[2:])
+        else:
+            vote_length = self.vote_length
+
+        # Check if the user supplied extra parameters
+        extra_options = self.process_message(msg, self.options_re)
+        if extra_options:
+            options = extra_options.split(' ')
+            # TODO: need to remove commas
+            if len(options) < 1:
+                return False
+            # Create a dictionary of vote options with 0 values.
+            values = [0 for option in options]
+            vote_options = dict(zip(options, values))
+        else:
+            vote_options = self.default_option
+
+        return vote_length, vote_options
+
+    async def run_vote(self, client, channel, vote_length):
+        '''
+        Simple async function that sleeps for the vote length.
+        '''
+        await asyncio.sleep(vote_length)
+        # Count the number of votes.
+        await client.send_message(channel, 'finished vote time')
+
+    async def start_vote(self, msg, user, channel, client):
+        '''
+        Main function that handles the vote function. Handles
+        the 
+        '''
+        if channel not in self.active_votes:
+            processed_input = self.handle_input(msg)
+            if processed_input:
+                # Save the parameters and
+                vote_len, params = processed_input
+                # Save a reference to the sleep function, the valid parameteres
+                # for the specific vote and an empty list which will contain
+                # the name of users who have already voted.
+                self.active_votes[channel] = (self.run_vote, params, [])
+                print('starting vote with ', params)
+                await self.active_votes[channel][0](client, channel, vote_len)
+            else:
+                return 'error bruh'
+        else:
+            # An active vote already exists for this channel.
+            # So check if the user already voted for in this.
+            if user in self.active_votes[channel][2]:
+                return 'You already voted in the current active vote'
+            else:
+                # Check if the supplied argument is a valid vote option.
+                if msg in self.active_votes[channel][1]:
+                    self.active_votes[channel][1][msg] += 1
+                    return 'increasing %s vote :)' % msg
+                else:
+                    return 'invalid vote argument'
+            return 'exists'
+
+        # Delete the dictionary entry now that the vote is finished.
+        del self.active_votes[channel]
+        return 'donezo'

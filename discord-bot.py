@@ -37,9 +37,14 @@ async def on_message(message):
         user = message.author.mention
         if msg.lower().startswith(command.lower()):
             msg = msg[len(command):].strip()
-            response = getattr(client, client.commands[command])(msg, user)
+            if command in client.async_commands:
+                response = await getattr(client,
+                                         client.commands[command])(msg, user, message.channel, client)
+            else:
+                response = getattr(client, client.commands[command])(msg, user)
             await client.send_message(message.channel, response)
             break
+
 
 def add_functions(config):
     '''
@@ -51,6 +56,7 @@ def add_functions(config):
     boards = utils.Boards()
     frames = utils.Frames(config['frame_data'])
     commands = utils.AddCommands()
+    votes = utils.Voting()
 
     client.get_frames = frames.get_frames
     client.simpsons_gif = frinkiac.get_gif
@@ -67,8 +73,12 @@ def add_functions(config):
     client.add_command = commands.add_command
     client.get_command = commands.get_command
 
+    client.start_vote = votes.start_vote
+
     client.commands = config['common-actions']
     client.commands.update(config['discord-actions'])
+    client.commands.update(config['async_commands'])
+    client.async_commands = config['async_commands']
 
 
 def main():
