@@ -917,7 +917,7 @@ class Voting():
                         "you've already voted") % user
             else:
                 # Check if the supplied argument is a valid vote option.
-                vote_option = msg.lower()
+                vote_option = msg.lower().strip()
                 valid_options = self.active_votes[channel][1]
                 if vote_option in valid_options:
                     self.active_votes[channel][1][vote_option] += 1
