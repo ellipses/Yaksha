@@ -13,6 +13,11 @@ frinkiac:
     api_url:
     gif_url:
     caption_url:
+add_commands:
+  irc:
+      file: irc_additional_commands.txt
+  discord:
+      file: additional_commands.txt
 arbitary:
   skins: filename
 common-actions:
