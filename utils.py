@@ -709,7 +709,7 @@ class Frames():
 class AddCommands():
 
     def __init__(self, config={}):
-        self.file = 'additional_commands.txt'
+        self.file = config['file']
 
     def save_command(self, command, actions):
         with open(self.file, 'a') as file:
@@ -793,7 +793,7 @@ class Voting():
         length and supplied parameteres(if any).
 
         Expected vote format:
-            !vote[--time] String of the vote [[parameters]]
+            !vote[--time] String of the vote [[parameter1, parm2]]
         '''
         # Check if the user supplied a length
         regex_result = self.apply_regex(msg, self.length_re)
@@ -811,12 +811,11 @@ class Voting():
             msg, extra_options = regex_result
             # They might have used commas to seperate the parameters
             # so parse it out.
-            extra_options = extra_options.replace(',', '')
             extra_options = extra_options.replace('[', '').replace(']', '')
-            options = extra_options.lower().split(' ')
+            options = extra_options.lower().split(',')
 
             option_len = len(options)
-            if option_len < 1:
+            if option_len < 2:
                 return False
 
             # Create a dictionary with the voter counts set to 0
@@ -843,7 +842,7 @@ class Voting():
         vote has started asyncronously.
         '''
         vote_parms = self.active_votes[channel][1]
-        start_string = 'Starting vote ``` %s ``` with options ' % msg
+        start_string = 'Starting vote ```%s``` with options ' % msg
         param_string = ' '.join(['%s' for index in range(len(vote_parms))])
         start_string += '[ ' + param_string % tuple(vote_parms.keys()) + ' ]'
         start_string += ' For %s minutes.' % vote_length
@@ -858,17 +857,17 @@ class Voting():
         it up.
         '''
         vote_parms = self.active_votes[channel][1]
-        end_string = 'Voting for ** %s ** completed.' % msg
+        end_string = 'Voting for ```%s``` completed.' % msg
 
         max_value = max(vote_parms.values())
         winners = [key for key, value in vote_parms.items()
                    if value == max_value]
 
         if len(winners) == 1:
-            end_string += ' The winner is %s' % tuple(winners)
+            end_string += ' The winner is **%s**' % tuple(winners)
         else:
             winner_string = ' '.join(['%s' for index in range(len(winners))])
-            end_string += ' The winners are [ ' + winner_string % tuple(winners) + ' ]'
+            end_string += ' The winners are [ **' + winner_string % tuple(winners) + '** ]'
 
         await client.send_message(channel, end_string)
 
@@ -891,7 +890,7 @@ class Voting():
         that only vote is going at a time in a channel.
 
         Calls from a channel that has a vote going on are
-        considered to vote for the ongoing vote.
+        considered to be a vote for the ongoing vote.
 
         dict entry: active_votes(client, {option: count}, [voters])
         '''
@@ -903,7 +902,7 @@ class Voting():
                 # for the specific vote and an empty list which will contain
                 # the name of users who have already voted.
                 self.active_votes[channel] = (self.run_vote, params, [])
-                print('starting vote with ', params)
+                # print('starting vote with ', params)
                 # Start the actual vote.
                 await self.active_votes[channel][0](client, channel, vote_len, msg)
             else:

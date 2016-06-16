@@ -1,6 +1,6 @@
 discord:
     email: 
-    password:
+    password: 
 frame_data:
   url: 
 twitch:
@@ -31,3 +31,5 @@ discord-actions:
   '!add_channel': 'add_stream'
   '!add_cmd': 'add_command'
   'Yaksha: get': 'get_command'
+async_commands:
+  '!vote': 'start_vote'  
