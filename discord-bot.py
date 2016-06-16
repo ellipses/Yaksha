@@ -42,7 +42,9 @@ async def on_message(message):
                                          client.commands[command])(msg, user, message.channel, client)
             else:
                 response = getattr(client, client.commands[command])(msg, user)
-            await client.send_message(message.channel, response)
+
+            if response:
+                await client.send_message(message.channel, response)
             break
 
 
