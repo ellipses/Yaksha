@@ -37,4 +37,5 @@ discord-actions:
   '!add_cmd': 'add_command'
   'Yaksha: get': 'get_command'
 async_commands:
-  '!vote': 'start_vote'  
+  '!vote': 'start_vote'
+  '!remindme': 'set_reminder'  

@@ -60,6 +60,7 @@ def add_functions(config):
 
     commands = utils.AddCommands(config['add_commands']['discord'])
     votes = utils.Voting()
+    reminders = utils.Reminder()
 
     client.get_frames = frames.get_frames
     client.simpsons_gif = frinkiac.get_gif
@@ -77,6 +78,7 @@ def add_functions(config):
     client.get_command = commands.get_command
 
     client.start_vote = votes.start_vote
+    client.set_reminder = reminders.set_reminder
 
     client.commands = config['common-actions']
     client.commands.update(config['discord-actions'])

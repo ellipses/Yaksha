@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from dateparser.date import DateDataParser
 from datetime import datetime, timedelta
 from fuzzywuzzy import process
 from bs4 import BeautifulSoup
@@ -928,3 +929,103 @@ class Voting():
                     error_str = 'Invalid vote option %s. ' % user
                     error_str += 'The options are ' + str(tuple(valid_options.keys()))
                     return error_str
+
+
+class Reminder():
+
+    def __init__(self):
+        self.active_reminder = {}
+        self.regex = r'\[(.*)\]'
+        self.settings = {'PREFER_DATES_FROM': 'future',
+                         'DATE_ORDER': 'DMY'}
+        self.parser = DateDataParser(languages=['en'],
+                                     allow_redetect_language=False,
+                                     settings=self.settings)
+
+    async def send_reminder_start_msg(self, user, channel, client, time):
+        '''
+        Gives an acknowledgement that the reminder has been set.
+        '''
+        time = time.replace(microsecond=0)
+        msg = ":+1: %s I'll remind you at %s UTC." % (user, str(time))
+        await client.send_message(channel, msg)
+
+    async def send_reminder_end_msg(self, user, channel, client, text):
+        '''
+        Sends the message when the reminder finishes with the text
+        if it was passed in.
+        '''
+        if text:
+            msg = 'Hello %s, you asked me to remind you of **%s**.' % (user,
+                                                                      text)
+        else:
+            msg = 'Hello %s, you asked me to remind you at this time.' % user
+        await client.send_message(channel, msg)
+
+    async def start_reminder_sleep(self, delta, user, channel, client, text, time):
+        '''
+        Asyncronously sleeps for the reminder length.
+        '''
+        # Send a message that the reminder is going to be set.
+        await self.send_reminder_start_msg(user, channel, client, time)
+        await asyncio.sleep(delta.total_seconds())
+        await self.send_reminder_end_msg(user, channel, client, text)
+
+    def apply_regex(self, msg):
+        '''
+        Applies the regex to check if the user passed
+        in a optional string in square brackets.
+        Returns the original message with the string
+        removed and the captured msg.
+        '''
+        regex_result = re.search(self.regex, msg)
+        if regex_result:
+            msg = re.sub(self.regex, '', msg).strip()
+            return msg, regex_result.group(1)
+        else:
+            return False
+
+    def parse_msg(self, msg, user):
+        '''
+        Parses the message passed along with the !remind command.
+        Uses the dateparser library to check if the time string
+        is valid
+        Format: !remindme <time period> [optional string]
+        '''
+        parsed_time = self.parser.get_date_data(msg)['date_obj']
+        if not parsed_time:
+            error_msg = ('I could not interept your message %s, try specifing '
+                         'the time period in a different format.') % user
+            return (False, error_msg)
+        now = datetime.utcnow()
+        if parsed_time < now:
+            error_msg = ("Dont waste my time %s, you can't expect "
+                         "me to remind you of an event in the past.") % user
+            return (False, error_msg)
+        difference = parsed_time - now
+        return (True, difference, parsed_time)
+
+    async def set_reminder(self, msg, user, channel, client):
+        '''
+        Main function that called to set a reminder. Calls the
+        helper functions to parse and to check if its valid.
+
+        If the message is valid, the asyncronous sleep function
+        is called.
+
+        Currently loses state on restart ;_; could write/load
+        to a file.
+        '''
+        reminder_txt = None
+        optional_string = self.apply_regex(msg)
+        if optional_string:
+            msg, reminder_txt = optional_string
+
+        parsed_msg = self.parse_msg(msg, user)
+        if not parsed_msg[0]:
+            return parsed_msg[1]
+        else:
+            await self.start_reminder_sleep(parsed_msg[1], user,
+                                            channel, client, reminder_txt,
+                                            parsed_msg[2])
+
