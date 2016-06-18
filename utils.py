@@ -332,9 +332,7 @@ class Frinkiac():
 class Boards():
 
     def __init__(self):
-        self.url = ('http://www.boards.ie/search/submit/'
-                    '?forum=1204&subforums=1&sort=newest&date_to=&date_from='
-                    '&query=casuals')
+        self.url = ('http://www.boards.ie/vbulletin/forumdisplay.php?f=1204')
 
     @memoize(60 * 60)
     def get_most_recent_thead(self, nocache=False):
@@ -347,11 +345,17 @@ class Boards():
         if resp.status_code == 200:
             soup = BeautifulSoup(resp.text, 'html.parser')
 
-            # Make sure the thread title contains the word casual because the
-            # search can sometimes match the word 'casuals' in a thread post.
-            for thread in soup.findAll('div', class_='result_wrapper'):
-                if 'casual' in thread.find('a').contents[0].lower():
-                    return thread.find('a').get('href')
+
+            # Find the second tbody which containts the threads
+            threads = soup.findAll('tbody')[1].findAll('tr')
+
+            for thread in threads:
+                thread_titles = thread.find('div').find('a')
+                title = thread_titles.contents[0]
+                if 'casual' in title.lower():
+                    href = thread_titles.get('href')
+                    link = 'http://www.boards.ie/vbulletin/%s' % href
+                    return link
         else:
             return False
 
