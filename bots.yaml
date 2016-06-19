@@ -1,6 +1,6 @@
 discord:
-    email: prasadt@tcd.ie
-    password: thisisfordiscord
+    email: 
+    password: 
 frame_data:
   url: 
 twitch:
@@ -39,3 +39,4 @@ discord-actions:
 async_commands:
   '!vote': 'start_vote'
   '!remindme': 'set_reminder'  
+  '!mymention': 'my_mention'

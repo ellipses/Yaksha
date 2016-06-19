@@ -79,6 +79,7 @@ def add_functions(config):
 
     client.start_vote = votes.start_vote
     client.set_reminder = reminders.set_reminder
+    client.my_mention = arbitary.get_my_mention
 
     client.commands = config['common-actions']
     client.commands.update(config['discord-actions'])

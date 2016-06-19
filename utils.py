@@ -425,6 +425,7 @@ class Arbitary():
     def __init__(self, config={}):
         self.config = config
         self.tourney_url = 'http://shoryuken.com/tournament-calendar/'
+        self.history_limit = 500
 
     def shuffle(self, sentence, author):
         '''
@@ -528,6 +529,24 @@ class Arbitary():
         else:
             return ('Got %s when trying to get list of'
                     ' tourneys') % resp.status_code
+
+    async def get_my_mention(self, message, user, channel, client):
+        '''
+        Shows the last message in the channel that mentioned the user
+        that uses this command.
+        '''
+        found = False
+        async for message in client.logs_from(channel,
+                                              limit=self.history_limit):
+            if user in message.content:
+                await client.send_message(channel, message.content)
+                found = True
+                break
+
+        if not found:
+            response = ('Sorry %s, I could not find any mention of you in'
+                        ' the last %s messages of this channel.') % (user, self.history_limit)
+            await client.send_start_message(channel, 'not found')
 
 
 class Gifs():
