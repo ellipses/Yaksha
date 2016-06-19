@@ -538,11 +538,11 @@ class Arbitary():
         async for message in client.logs_from(channel,
                                               limit=self.history_limit):
             if user in message.content:
-                await client.send_message(channel, message.content)
-                found = True
-                return None
-
-        
+                username = message.author.display_name
+                response = ('_The last message that mentioned you'
+                            ' was:_  "%s" by %s') % (message.content,
+                                                       username)
+                return response
         response = ('Sorry %s, I could not find any mention of you in'
                         ' the last %s messages of this channel.') % (user, self.history_limit)
         return response
