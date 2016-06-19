@@ -535,18 +535,17 @@ class Arbitary():
         Shows the last message in the channel that mentioned the user
         that uses this command.
         '''
-        found = False
         async for message in client.logs_from(channel,
                                               limit=self.history_limit):
             if user in message.content:
                 await client.send_message(channel, message.content)
                 found = True
-                break
+                return None
 
-        if not found:
-            response = ('Sorry %s, I could not find any mention of you in'
+        
+        response = ('Sorry %s, I could not find any mention of you in'
                         ' the last %s messages of this channel.') % (user, self.history_limit)
-            await client.send_start_message(channel, 'not found')
+        return response
 
 
 class Gifs():
