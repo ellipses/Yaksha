@@ -844,13 +844,17 @@ class Voting():
         regex_result = self.apply_regex(msg, self.options_re)
         if regex_result:
             msg, extra_options = regex_result
-            # They might have used commas to seperate the parameters
-            # so parse it out.
+
+            # remove square brackets, split on comma and strip whitespace
             extra_options = extra_options.replace('[', '').replace(']', '')
             options = extra_options.lower().split(',')
+            options = [word.strip() for word in options]
 
+            # Storing length in a variable here to later compare
+            # after forming a dictionary to ensure there were no
+            # duplicates.
             option_len = len(options)
-            if option_len < 2:
+            if len(options) < 2:
                 return False
 
             # Create a dictionary with the voter counts set to 0
@@ -954,6 +958,7 @@ class Voting():
                 # Check if the supplied argument is a valid vote option.
                 vote_option = msg.lower().strip()
                 valid_options = self.active_votes[channel][1]
+     
                 if vote_option in valid_options:
                     self.active_votes[channel][1][vote_option] += 1
                     # Add the user to the list of users.
