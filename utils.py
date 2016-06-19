@@ -332,9 +332,7 @@ class Frinkiac():
 class Boards():
 
     def __init__(self):
-        self.url = ('http://www.boards.ie/search/submit/'
-                    '?forum=1204&subforums=1&sort=newest&date_to=&date_from='
-                    '&query=casuals')
+        self.url = ('http://www.boards.ie/vbulletin/forumdisplay.php?f=1204')
 
     @memoize(60 * 60)
     def get_most_recent_thead(self, nocache=False):
@@ -347,11 +345,17 @@ class Boards():
         if resp.status_code == 200:
             soup = BeautifulSoup(resp.text, 'html.parser')
 
-            # Make sure the thread title contains the word casual because the
-            # search can sometimes match the word 'casuals' in a thread post.
-            for thread in soup.findAll('div', class_='result_wrapper'):
-                if 'casual' in thread.find('a').contents[0].lower():
-                    return thread.find('a').get('href')
+
+            # Find the second tbody which containts the threads
+            threads = soup.findAll('tbody')[1].findAll('tr')
+
+            for thread in threads:
+                thread_titles = thread.find('div').find('a')
+                title = thread_titles.contents[0]
+                if 'casual' in title.lower():
+                    href = thread_titles.get('href')
+                    link = 'http://www.boards.ie/vbulletin/%s' % href
+                    return link
         else:
             return False
 
@@ -421,6 +425,7 @@ class Arbitary():
     def __init__(self, config={}):
         self.config = config
         self.tourney_url = 'http://shoryuken.com/tournament-calendar/'
+        self.history_limit = 500
 
     def shuffle(self, sentence, author):
         '''
@@ -524,6 +529,24 @@ class Arbitary():
         else:
             return ('Got %s when trying to get list of'
                     ' tourneys') % resp.status_code
+
+    async def get_my_mention(self, message, user, channel, client):
+        '''
+        Shows the last message in the channel that mentioned the user
+        that uses this command.
+        '''
+        found = False
+        async for message in client.logs_from(channel,
+                                              limit=self.history_limit):
+            if user in message.content:
+                await client.send_message(channel, message.content)
+                found = True
+                break
+
+        if not found:
+            response = ('Sorry %s, I could not find any mention of you in'
+                        ' the last %s messages of this channel.') % (user, self.history_limit)
+            await client.send_start_message(channel, 'not found')
 
 
 class Gifs():
