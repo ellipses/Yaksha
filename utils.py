@@ -426,6 +426,7 @@ class Arbitary():
         self.config = config
         self.tourney_url = 'http://shoryuken.com/tournament-calendar/'
         self.history_limit = 500
+        self.mention_regex = r'-(\d)'
 
     def shuffle(self, sentence, author):
         '''
@@ -534,15 +535,26 @@ class Arbitary():
         '''
         Shows the last message in the channel that mentioned the user
         that uses this command.
+
+        If an optional parameter with a number is passed is, its returns 
+        the last nth last mention.
         '''
+        regex_result = re.search(self.mention_regex, message)
+        count = 0
+        if regex_result:
+            count = int(regex_result.group(1))
+
         async for message in client.logs_from(channel,
                                               limit=self.history_limit):
             if user in message.content:
-                username = message.author.display_name
-                response = ('_The last message that mentioned you'
-                            ' was:_  "%s" by %s') % (message.content,
-                                                       username)
-                return response
+                if count == 0:
+                    username = message.author.display_name
+                    response = '%s _by %s_' % (message.content,
+                                               username)
+                    return response
+                else:
+                    count -= 1
+
         response = ('Sorry %s, I could not find any mention of you in'
                         ' the last %s messages of this channel.') % (user, self.history_limit)
         return response
