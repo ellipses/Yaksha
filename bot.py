@@ -1,7 +1,5 @@
 #!/usr/bin/python
-from twisted.internet import reactor, protocol
-from twisted.words.protocols.irc import IRCClient
-import utils
+import pydle
 import yaml
 import time
 
@@ -21,8 +19,8 @@ class MessageLogger:
     def close(self):
         self.file.close()
 
-
-class Bot(IRCClient):
+'''
+class Bot():
 
     def __init__(self):
         config_path = 'bots.yaml'
@@ -33,7 +31,7 @@ class Bot(IRCClient):
         gifs = utils.Gifs()
         boards = utils.Boards()
         frames = utils.Frames(config['frame_data'])
-	commands = utils.AddCommands(config['add_commands']['irc'])	
+        commands = utils.AddCommands(config['add_commands']['irc'])  
 
         self.simpsons_gif = frinkiac.get_gif
         self.captioned_gif = frinkiac.get_captioned_gif
@@ -42,8 +40,8 @@ class Bot(IRCClient):
         self.tourney = arbitary.get_tourneys
         self.giffy_gif = gifs.get_gif
         self.get_frames = frames.get_frames
-	self.add_command = commands.add_command
-	self.get_command = commands.get_command
+        self.add_command = commands.add_command
+        self.get_command = commands.get_command
 
         self.commands = config['common-actions']
         # self.commands.update(config['irc-actions'])
@@ -79,38 +77,35 @@ class Bot(IRCClient):
                     break
             user = user.split('!', 1)[0]
             self.loggers[channel[1:].lower()].log("<%s> %s" % (user, message))
+'''
 
+class MyClient(pydle.Client):
+    """ This is a simple bot that will greet people as they join the channel. """
 
-class BotFactory(protocol.ClientFactory):
-    '''
-    Factory that creates the bots and logs various connection issues.
-    '''
+    def __init__(self, channels, *args, **kwawgs):
+        self.channels_to_join = channels
+        super().__init__(*args, **kwawgs)
 
-    protocol = Bot
+    def on_connect(self):
+        for channel in self.channels_to_join:
+            self.join(channel)
+            print('Connected to %s' % channel) 
 
-    def __init__(self, channels, nickname='Yaksha'):
-        self.channels = channels
-        self.nickname = nickname
-
-    def startedConnecting(self, connector):
-        print ('Started connecting')
-
-    def clientConnectionFailed(self, connector, reason):
-        print ('Connection failed because of %s. Trying to reconnect' % reason)
-        connector.connect()
-
-    def clientConnectionLost(self, connector, reason):
-        print ('Connection failed because of %s. Trying to reconnect' % reason)
-        connector.connect()
+    def on_message(self, channel, user, msg):
+        pass
 
 
 def main():
     print ('Starting up the bot.')
-    channels = ['tomtest']
-    reactor.connectTCP('irc.quakenet.org', 6667,
-                       BotFactory(channels))
-    reactor.run()
 
-# Standard python boilerplate.
+    channels = ['#tomtest']
+    client = MyClient(channels, nickname='Yaksha',
+                      username='Yaksha', realname='Yaksha')
+    # Client.connect() is a blocking function.
+    client.connect('irc.quakenet.org', 6667)
+    print('Finished Connecting')
+    client.handle_forever()
+
+
 if __name__ == '__main__':
     main()

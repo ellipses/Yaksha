@@ -3,7 +3,7 @@ import discord
 import asyncio
 import re
 import yaml
-import utils
+from actions import actions
 
 global client
 client = discord.Client()
@@ -32,6 +32,11 @@ async def on_message(message):
 
     !simpsons caption: Returns a gif from Frinkiac containing the caption.
     '''
+    if message.author == client.user:
+        return
+
+
+
     for command in client.commands.keys():
         msg = message.content
         user = message.author.mention
@@ -51,16 +56,16 @@ async def on_message(message):
 def add_functions(config):
     '''
     '''
-    streams = utils.Streams()
-    frinkiac = utils.Frinkiac()
-    gifs = utils.Gifs()
-    arbitary = utils.Arbitary()
-    boards = utils.Boards()
-    frames = utils.Frames(config['frame_data'])
+    streams = actions.Streams()
+    frinkiac = actions.Frinkiac()
+    gifs = actions.Gifs()
+    arbitary = actions.Arbitary()
+    boards = actions.Boards()
+    frames = actions.Frames(config['frame_data'])
 
-    commands = utils.AddCommands(config['add_commands']['discord'])
-    votes = utils.Voting()
-    reminders = utils.Reminder()
+    commands = actions.AddCommands(config['add_commands']['discord'])
+    votes = actions.Voting()
+    reminders = actions.Reminder()
 
     client.get_frames = frames.get_frames
     client.simpsons_gif = frinkiac.get_gif
@@ -94,7 +99,8 @@ def main():
 
     email = config['discord']['email']
     password = config['discord']['password']
-    client.run(email, password)
+    token = 'MTk0MTU2NzMwMjI4Mjc3MjQ4.CkikCg.NDRe0hFxOu_RGHenDordH-U6nQo'
+    client.run(token)
 
 if __name__ == '__main__':
     main()
