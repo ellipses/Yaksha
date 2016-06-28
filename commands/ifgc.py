@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from fuzzywuzzy import process
-from utilities import memoize
+from commands.utilities import memoize
 from bs4 import BeautifulSoup
 import requests
 import re

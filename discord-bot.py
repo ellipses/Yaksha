@@ -60,6 +60,7 @@ def add_functions(config):
     frinkiac = actions.Frinkiac()
     gifs = actions.Gifs()
     arbitary = actions.Arbitary()
+    tourney = actions.Tourney()
     boards = ifgc.Boards()
     frames = ifgc.Frames(config['frame_data'])
 
@@ -72,7 +73,7 @@ def add_functions(config):
     client.captioned_gif = frinkiac.get_captioned_gif
     client.shuffle = arbitary.shuffle
     client.casuals = boards.get_thread_posters
-    client.tourney = arbitary.get_tourneys
+    client.tourney = tourney.get_tourneys
     client.giffy_gif = gifs.get_gif
 
     client.translate_gif = gifs.get_translate_gif
