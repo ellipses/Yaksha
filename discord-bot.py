@@ -1,9 +1,9 @@
 #!/usr/bin/python
+from commands import ifgc, actions, voting
 import discord
 import asyncio
 import re
 import yaml
-from actions import actions
 
 global client
 client = discord.Client()
@@ -60,11 +60,11 @@ def add_functions(config):
     frinkiac = actions.Frinkiac()
     gifs = actions.Gifs()
     arbitary = actions.Arbitary()
-    boards = actions.Boards()
-    frames = actions.Frames(config['frame_data'])
+    boards = ifgc.Boards()
+    frames = ifgc.Frames(config['frame_data'])
 
     commands = actions.AddCommands(config['add_commands']['discord'])
-    votes = actions.Voting()
+    votes = voting.Voting()
     reminders = actions.Reminder()
 
     client.get_frames = frames.get_frames
