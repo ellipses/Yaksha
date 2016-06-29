@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from commands import ifgc, actions, voting
+import asyncio
 import pydle
 import yaml
 import time
@@ -50,6 +51,7 @@ class MyClient(pydle.Client):
 
         self.commands = self.config['common-actions']
 
+        self._loop = asyncio.get_event_loop()
         super().__init__(*args, **kwawgs)
 
     def add_commands(self):
@@ -64,19 +66,37 @@ class MyClient(pydle.Client):
             self.join(channel)
             print('Connected to %s' % channel) 
 
-    def on_message(self, channel, user, msg):
+    async def send_message(self, channel, message):
         '''
+        Async send method to maintain compatibility
+        with discord format.
+        '''
+        await asyncio.sleep(0)
+        self.message(channel, message)
+    
+    def on_message(self, *args, **kwargs):
+        '''
+        Function thats calls when a a message is received.
+        Starts up the async loop and calls handle message where
+        the logic stuff is done.
+        '''
+        self._loop.run_until_complete(self.handle_message(*args, **kwargs))
+
+    async def handle_message(self, channel, user, msg):
+        '''
+        Main method that determines how a received message is handled.
         '''
         if channel == self.nickname:
-            self.message(channel, ("Sneaky communication isn't nice,"
-                                   " play with the group"))
+            await self.send_message(channel, ("Sneaky communication isn't nice,"
+                                              " play with the group"))
         else:
             for command in self.commands.keys():
                 if msg.lower().startswith(command.lower()):
                     msg = msg[len(command):].strip()
                     response = getattr(self, self.commands[command])(msg,
                                                                      user)
-                    self.message(channel, response)
+
+                    await self.send_message(channel, response)
                     break
 
 
