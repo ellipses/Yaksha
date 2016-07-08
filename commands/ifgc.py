@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from fuzzywuzzy import process
-from commands.utilities import memoize
+from commands.utilities import memoize, get_request
 from bs4 import BeautifulSoup
 import requests
 import re
@@ -11,16 +11,16 @@ class Boards():
     def __init__(self):
         self.url = ('http://www.boards.ie/vbulletin/forumdisplay.php?f=1204')
 
-    @memoize(60 * 60)
-    def get_most_recent_thead(self, nocache=False):
+    #@memoize(60 * 60)
+    async def get_most_recent_thead(self, nocache=False):
         '''
         Use the search feature to find and return the link
         for the most recent thread that was created.
         '''
-        resp = requests.get(self.url)
+        resp = await get_request(self.url)
 
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, 'html.parser')
+        if resp == 200:
+            soup = BeautifulSoup(resp, 'html.parser')
 
             # Find the second tbody which containts the threads
             threads = soup.findAll('tbody')[1].findAll('tr')
@@ -35,16 +35,16 @@ class Boards():
         else:
             return False
 
-    @memoize(60 * 15)
-    def find_posters(self, thread_url, nocache=False):
+    #@memoize(60 * 15)
+    async def find_posters(self, thread_url, nocache=False):
         '''
         Returns the names of all the posters in the thread
         as a list of strings.
         '''
-        resp = requests.get(thread_url)
+        resp = await get_request(thread_url)
 
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, 'html.parser')
+        if resp:
+            soup = BeautifulSoup(resp, 'html.parser')
             posters = soup.find_all('a', class_='bigusername')
 
             unique_posters = []
@@ -62,14 +62,14 @@ class Boards():
         else:
             return False
 
-    def get_thread_posters(self, *args, **kwargs):
+    async def get_thread_posters(self, *args, **kwargs):
         '''
-        Main function thats called when trying to get a list of
+        Main method thats called when trying to get a list of
         people who have posted in the casuals thread.
         '''
-        thread = self.get_most_recent_thead()
+        thread = await self.get_most_recent_thead()
         if thread:
-            posters = self.find_posters(thread)
+            posters = await self.find_posters(thread)
 
             if posters:
 
@@ -110,19 +110,19 @@ class Frames():
         self.output_format = ('%s - (%s) - [Startup]: %s [Active]: %s [Recovery]: %s '
                               '[On Hit]: %s [On Block]: %s')
 
-    @memoize(60 * 60 * 24 * 7)
-    def get_data(self):
+    #@memoize(60 * 60 * 24 * 7)
+    async def get_data(self):
         '''
         Simple helper function that hits the frame data dump
         endpoint and returns the contents in json format.
         '''
-        resp = requests.get(self.url)
-        if resp.status_code == 200:
-            return json.loads(resp.text)
+        resp = await get_request(self.url)
+        if resp:
+            return json.loads(resp)
         else:
             return False
 
-    @memoize(60 * 60 * 24 * 7)
+    #@memoize(60 * 60 * 24 * 7)
     def add_reverse_mapping(self, data):
         '''
         Create a reverse mapping between common names,
@@ -207,9 +207,9 @@ class Frames():
                                        data['onBlock'])
         return output
 
-    def get_frames(self, msg, user):
+    async def get_frames(self, msg, user, *args):
         '''
-        Main function thats called for the frame data function.
+        Main method thats called for the frame data function.
         Currently works only for SFV data thanks to Pauls nicely
         formatted data <3.
         '''
@@ -226,7 +226,7 @@ class Frames():
         else:
             vtrigger = False
 
-        frame_data = self.get_data()
+        frame_data = await self.get_data()
         if not frame_data:
             return 'Got an error when trying to get frame data :(.'
         else:

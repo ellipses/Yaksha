@@ -1,6 +1,5 @@
 discord:
-    email: 
-    password: 
+  token: 'MTk0MTU2NzMwMjI4Mjc3MjQ4.CkikCg.NDRe0hFxOu_RGHenDordH-U6nQo'
 frame_data:
   url: 
 twitch:
@@ -21,22 +20,21 @@ add_commands:
 arbitary:
   skins: filename
 common-actions:
-  '!simpsons': 'simpsons_gif'
-  '!scaption': 'captioned_gif'
-  '!shuffle': 'shuffle'
-  '!tourney': 'tourney'
-  '!casuals': 'casuals'
   '!gif': 'giffy_gif'
   '!frames': 'get_frames'
+  '!casuals': 'casuals'
+  '!tourney': 'tourney'
+  '!scaption': 'captioned_gif'
+  '!simpsons': 'simpsons_gif'
+  '!vote': 'start_vote'
+  '!remindme': 'set_reminder'  
+  '!whens': 'whens'
+  '!shuffle': 'shuffle'
 irc-actions:
 discord-actions:
   '!tgif': 'translate_gif' 
   '!skins': 'skins'
-  '!whens': 'whens'
   '!add_channel': 'add_stream'
   '!add_cmd': 'add_command'
   'Yaksha: get': 'get_command'
-async_commands:
-  '!vote': 'start_vote'
-  '!remindme': 'set_reminder'  
   '!mymention': 'my_mention'

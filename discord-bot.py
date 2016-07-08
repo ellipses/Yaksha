@@ -1,4 +1,6 @@
 #!/usr/bin/python
+import logging
+logging.basicConfig(level=logging.DEBUG)
 from commands import ifgc, actions, voting
 import discord
 import asyncio
@@ -35,19 +37,13 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-
-
     for command in client.commands.keys():
         msg = message.content
         user = message.author.mention
         if msg.lower().startswith(command.lower()):
             msg = msg[len(command):].strip()
-            if command in client.async_commands:
-                response = await getattr(client,
-                                         client.commands[command])(msg, user, message.channel, client)
-            else:
-                response = getattr(client, client.commands[command])(msg, user)
-
+            response = await getattr(client,
+                                     client.commands[command])(msg, user, message.channel, client)
             if response:
                 await client.send_message(message.channel, response)
             break
@@ -89,8 +85,6 @@ def add_functions(config):
 
     client.commands = config['common-actions']
     client.commands.update(config['discord-actions'])
-    client.commands.update(config['async_commands'])
-    client.async_commands = config['async_commands']
 
 
 def main():
@@ -98,9 +92,7 @@ def main():
     config = yaml.load(open(config_path).read())
     add_functions(config)
 
-    email = config['discord']['email']
-    password = config['discord']['password']
-    token = 'MTk0MTU2NzMwMjI4Mjc3MjQ4.CkikCg.NDRe0hFxOu_RGHenDordH-U6nQo'
+    token = config['discord']['token']
     client.run(token)
 
 if __name__ == '__main__':

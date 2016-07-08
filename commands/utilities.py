@@ -1,7 +1,9 @@
 #!/usr/bin/python
 from datetime import datetime, timedelta
 from functools import wraps
+import aiohttp
 import time
+
 
 
 def rate_limit(time_gap):
@@ -72,3 +74,19 @@ def memoize(cache_time):
 
         return func_wrapper
     return memoize_decorator
+
+
+async def get_request(url):
+    '''
+    Wrapper to handle get requests asyncronously.
+    Returns the text if the status is 200, False
+    otherwise.
+    '''
+    response = ''
+    with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status == 200:
+                response = await resp.text()
+            else:
+                response == False
+    return response

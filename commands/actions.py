@@ -1,9 +1,10 @@
 #!/usr/bin/python
-from commands.utilities import rate_limit, memoize
+from commands.utilities import rate_limit, memoize, get_request
 from dateparser.date import DateDataParser
 from datetime import datetime, timedelta
 from fuzzywuzzy import process
 from bs4 import BeautifulSoup
+import aiohttp
 import requests
 import asyncio
 import random
@@ -47,13 +48,13 @@ class Streams():
 
         return message
 
-    def display_stream_list(self, msg, user):
+    async def display_stream_list(self, msg, user, *args):
         channels = self.get_channels()
         channel_list = (',').join(channels.split(' '))
 
-        payload = requests.get(self.api_prefix + channel_list)
-        if payload.status_code == 200:
-            data = json.loads(payload.text)
+        resp = await get_request(self.api_prefix + channel_list)
+        if resp:
+            data = json.loads(resp)
             return self.format_channels(data)
         else:
             print ('Failed getting steam data with error %s' % payload.text)
@@ -175,7 +176,8 @@ class Frinkiac():
 
         return formated_msg
 
-    def handle_caption(self, caption):
+
+    async def handle_caption(self, caption):
         '''
         '''
         extend = False
@@ -196,8 +198,8 @@ class Frinkiac():
 
         # Hit the api endpoint to get a list of screencaps
         # that are relevant to the caption.
-        response = requests.get(self.api_url % caption)
-        screen_caps = json.loads(response.text)
+        response = await get_request(self.api_url % caption)
+        screen_caps = json.loads(response)
 
         if len(screen_caps) <= 1:
             return False
@@ -226,26 +228,26 @@ class Frinkiac():
 
         return (episode, timestamps, caption)
 
-    def get_gif(self, caption, user, text=False):
+    async def get_gif(self, caption, user, *args):
         '''
-        Main function that called to retreive a gif url.
-
-        Args:
-            caption: The message thats used hit the api endpoint.
-            text: Controls wether the generated gif will contain
-                  the caption.
+        Method thats called when trying to get a Frinkiac url.
+        Does basic error handling and calls handle_caption
+        which does most of the actual work.
         '''
-        resp = self.handle_caption(caption)
+        resp = await self.handle_caption(caption)
         if not resp:
             return 'Try fixing your quote.'
         episode, timestamps, caption = resp
         return self.gif_url % (episode,
                                timestamps[0], timestamps[-1])
 
-    def get_captioned_gif(self, caption, user):
+    async def get_captioned_gif(self, caption, user):
         '''
+        Method thats called when trying to get a gif with
+        a caption. Does basic error handling and base 64 
+        encoding and formatting of the caption.
         '''
-        resp = self.handle_caption(caption)
+        resp = await self.handle_caption(caption)
         if not resp:
             return 'Try fixing your quote.'
 
@@ -267,7 +269,7 @@ class Arbitary():
         self.history_limit = 500
         self.mention_regex = r'-(\d)'
 
-    def shuffle(self, sentence, author):
+    async def shuffle(self, sentence, author, *args):
         '''
         '''
         sentence = re.sub(r'\s\s+', ' ', sentence)
@@ -282,7 +284,7 @@ class Arbitary():
             return random.choice(word_list)
 
     @rate_limit(60 * 60 * 24)
-    def skins(self, message, author):
+    async def skins(self, message, author):
         '''
         '''
         skins_list = yaml.load(open('skins.yaml').read())
@@ -363,16 +365,16 @@ class Tourney():
         del tourney_list[0][:day_index * 4]
         return tourney_list
 
-    @memoize(60 * 60 * 24)
-    def get_tourneys(self, message, author):
+    #@memoize(60 * 60 * 24)
+    async def get_tourneys(self, message, author, *args):
         '''
         Uses the list of tournaments on the srk page
         to return the upcomming tournaments.
         '''
-        resp = requests.get(self.tourney_url)
+        resp = await get_request(self.tourney_url)
 
-        if resp.status_code == 200:
-            soup = BeautifulSoup(resp.text, 'html.parser')
+        if resp:
+            soup = BeautifulSoup(resp, 'html.parser')
             soup = soup.find_all('tbody')
             tourney_list = [month.find_all('td') for month in soup]
 
@@ -413,12 +415,12 @@ class Gifs():
         self.translate_url = ('http://api.giphy.com/v1/gifs/translate?s='
                               '%s&api_key=dc6zaTOxFJmzC')
 
-    def get_gif(self, quote, author):
+    async def get_gif(self, quote, author, *args):
         query = '+'.join(quote.split(' '))
-        resp = requests.get(self.search_url % query)
+        resp = await get_request(self.search_url % query)
 
-        if resp.status_code == 200:
-            gifs = resp.json()['data'][:5]
+        if resp:
+            gifs = json.loads(resp)['data'][:5]
             if len(gifs) == 0:
                 return "Sorry %s I could not find any gifs using that keyword :( ." % author
             urls = [gif['url'] for gif in gifs]
@@ -426,7 +428,7 @@ class Gifs():
         else:
             return 'Got an error when searching for gifs :('
 
-    def get_translate_gif(self, quote, author):
+    def get_translate_gif(self, quote, author, *args):
         query = '+'.join(quote.split(' '))
         resp = requests.get(self.translate_url % query)
 
