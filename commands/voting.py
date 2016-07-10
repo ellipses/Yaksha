@@ -5,7 +5,7 @@ import re
 
 class Voting():
 
-    def __init__(self):
+    def __init__(self, config={}):
         # regex to match a number at the start of the message.
         # Being a float is optional.
         self.length_re = r'--((\d*)?(\.\d*)?)'

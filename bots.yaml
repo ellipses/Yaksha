@@ -1,7 +1,7 @@
 discord:
-  token: 'MTk0MTU2NzMwMjI4Mjc3MjQ4.CkikCg.NDRe0hFxOu_RGHenDordH-U6nQo'
+  token: MTk0MTU2NzMwMjI4Mjc3MjQ4.CkikCg.NDRe0hFxOu_RGHenDordH-U6nQo
 frame_data:
-  url: 
+  url: 'someurl'
 twitch:
 irc:
 frinkiac:
@@ -13,10 +13,7 @@ frinkiac:
     gif_url:
     caption_url:
 add_commands:
-  irc:
-      file: irc_additional_commands.txt
-  discord:
-      file: additional_commands.txt
+  file: additional_commands.txt
 arbitary:
   skins: filename
 common-actions:

@@ -6,7 +6,6 @@ import aiohttp
 import time
 
 
-
 def rate_limit(time_gap):
     '''
     Decorator that limits how often a user can use
@@ -16,7 +15,7 @@ def rate_limit(time_gap):
 
     def rate_decorator(func):
         @wraps(func)
-        def func_wrapper(*args, **kwargs):
+        async def func_wrapper(*args, **kwargs):
 
             user = args[2]
             # Use the combination of the users name and
@@ -28,7 +27,7 @@ def rate_limit(time_gap):
                 time_diff = time.time() - _time[hash_key]
                 if time_diff > time_gap:
                     _time[hash_key] = time.time()
-                    return func(*args, **kwargs)
+                    return await func(*args, **kwargs)
                 else:
                     delta = timedelta(seconds=time_gap - time_diff)
                     time_format = datetime(1, 1, 1) + delta
@@ -43,7 +42,7 @@ def rate_limit(time_gap):
 
             else:
                 _time[hash_key] = time.time()
-                return func(*args, **kwargs)
+                return await func(*args, **kwargs)
 
         return func_wrapper
     return rate_decorator
@@ -58,18 +57,18 @@ def memoize(cache_time):
 
     def memoize_decorator(func):
         @wraps(func)
-        def func_wrapper(*args, **kwargs):
+        async def func_wrapper(*args, **kwargs):
             if func in _cache:
                 stored_time = _cache[func][1]
 
                 if time.time() - stored_time > cache_time:
-                    returned_result = func(*args, **kwargs)
+                    returned_result = await func(*args, **kwargs)
                     _cache[func] = (returned_result, time.time())
 
                 return _cache[func][0]
 
             else:
-                returned_result = func(*args, **kwargs)
+                returned_result = await func(*args, **kwargs)
                 _cache[func] = (returned_result, time.time())
                 return returned_result
 

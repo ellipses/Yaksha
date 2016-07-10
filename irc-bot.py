@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from interface import interface
+import interface
 import asyncio
 import irc3
 import yaml
@@ -9,14 +9,13 @@ import yaml
 class MyClient(object):
 
     def __init__(self, bot):
-
         self.bot = bot
         self.nick = self.bot.get_nick()
         self.channels = ['#tomtest']
         config_path = 'bots.yaml'
         self.config = yaml.load(open(config_path).read())
 
-        self.interface = interface
+        self.interface = interface.Interface(self.config)
         self.commands = self.config['common-actions']
 
     @irc3.event(irc3.rfc.CONNECTED)
@@ -43,7 +42,6 @@ class MyClient(object):
             data: message
             target: channel
         '''
-        print(data)
         await self.handle_message(mask, data, target)
 
     async def handle_message(self, user, msg, channel):
@@ -60,7 +58,8 @@ class MyClient(object):
                         command = command.lower()
                         response = await self.interface.call_command(command,
                                                                      msg, user,
-                                                                     channel, self)
+                                                                     channel,
+                                                                     self)
 
                         if response:
                             await self.send_message(channel, response)

@@ -18,7 +18,7 @@ import os
 
 class Streams():
 
-    def __init__(self):
+    def __init__(self, config={}):
         self.file = 'channel.txt'
         self.api_prefix = 'https://api.twitch.tv/kraken/streams/?channel='
 
@@ -288,14 +288,15 @@ class Arbitary():
             return random.choice(word_list)
 
     @rate_limit(60 * 60 * 24)
-    async def skins(self, message, author):
+    @register('!skins')
+    async def skins(self, message, author, *args):
         '''
         '''
         skins_list = yaml.load(open('skins.yaml').read())
         return random.choice(skins_list.split('\n'))
 
     @register('!mymention')
-    async def get_my_mention(self, message, user, channel, client):
+    async def get_my_mention(self, message, user, channel, client, *args):
         '''
         Shows the last message in the channel that mentioned the user
         that uses this command.
@@ -326,7 +327,7 @@ class Arbitary():
 
 class Tourney():
 
-    def __init__(self):
+    def __init__(self, config={}):
         self.tourney_url = 'http://shoryuken.com/tournament-calendar/'
 
     def convert_times(self, times):
@@ -370,7 +371,7 @@ class Tourney():
         del tourney_list[0][:day_index * 4]
         return tourney_list
 
-    #@memoize(60 * 60 * 24)
+    @memoize(60 * 60 * 24)
     @register('!tourney')
     async def get_tourneys(self, message, author, *args):
         '''
@@ -415,7 +416,7 @@ class Tourney():
 
 class Gifs():
 
-    def __init__(self):
+    def __init__(self, config={}):
         self.search_url = ('http://api.giphy.com/v1/gifs/search?q='
                            '%s&api_key=dc6zaTOxFJmzC')
         self.translate_url = ('http://api.giphy.com/v1/gifs/translate?s='
@@ -450,7 +451,7 @@ class Gifs():
 class AddCommands():
 
     def __init__(self, config={}):
-        self.file = config['file']
+        self.file = config['add_commands']['file']
 
     def save_command(self, command, actions):
         with open(self.file, 'a') as file:
@@ -477,8 +478,8 @@ class AddCommands():
                         return value[0]
         return False
 
-    @register('Yaksha: get')
-    def get_command(self, msg, user):
+    @register('yaksha: get')
+    async def get_command(self, msg, user, *args):
         '''
         '''
         # They might've sent multiple commands but
@@ -488,10 +489,10 @@ class AddCommands():
         if resp:
             return resp
         else:
-            return 'I am too sleepy to write reasonable error message, just stop doing wrong things.'
+            return "Command %s doesn't exist %s" % (cmd, user)
 
     @register('!add_cmd')
-    def add_command(self, msg, user):
+    async def add_command(self, msg, user):
         '''
         Main function that called when a user
         tries to add a new command.
@@ -500,14 +501,14 @@ class AddCommands():
         command = split_msg[0]
         actions = split_msg[1:]
         if self.save_command(command, actions):
-            return 'The command %s has been added.' % command
+            return 'The command _%s_ has been added.' % command
         else:
             return 'some error check traceback, too sleepy to write sensible error message'
 
 
 class Reminder():
 
-    def __init__(self):
+    def __init__(self, config={}):
         self.active_reminder = {}
         self.regex = r'\[(.*)\]'
         self.settings = {'PREFER_DATES_FROM': 'future',

@@ -8,18 +8,18 @@ import re
 
 class Boards():
 
-    def __init__(self):
+    def __init__(self, config={}):
         self.url = ('http://www.boards.ie/vbulletin/forumdisplay.php?f=1204')
 
-    #@memoize(60 * 60)
-    async def get_most_recent_thead(self, nocache=False):
+    @memoize(60 * 60)
+    async def get_most_recent_thead(self):
         '''
         Use the search feature to find and return the link
         for the most recent thread that was created.
         '''
         resp = await get_request(self.url)
 
-        if resp == 200:
+        if resp:
             soup = BeautifulSoup(resp, 'html.parser')
 
             # Find the second tbody which containts the threads
@@ -35,8 +35,8 @@ class Boards():
         else:
             return False
 
-    #@memoize(60 * 15)
-    async def find_posters(self, thread_url, nocache=False):
+    @memoize(60 * 15)
+    async def find_posters(self, thread_url):
         '''
         Returns the names of all the posters in the thread
         as a list of strings.
@@ -100,7 +100,7 @@ class Boards():
 class Frames():
 
     def __init__(self, config={}):
-        self.url = config['url']
+        self.url = config['frame_data']['url']
         self.regex = r'(^\S*)\s*(vtrigger|vt)?\s+(.+)'
         self.char_ratio_thresh = 65
         self.move_ratio_thresh = 65

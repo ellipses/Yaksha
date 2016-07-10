@@ -5,10 +5,11 @@ from commands import utilities
 
 class Interface():
 
-    def __init__(self):
+    def __init__(self, config={}):
         self._func_mapping = {}
         self._class_mapping = {}
         self._modules = [ifgc, voting, actions]
+        self.config = config
         self.remap_functions()
 
     def remap_functions(self):
@@ -17,7 +18,7 @@ class Interface():
         a function name to a tuple containing a reference to the
         function and a the name of the class it belongs to. The
         class name is used to select the correct class from the
-        class_mapping dictionary. 
+        class_mapping dictionary.
         '''
         name_mapping = utilities.get_callbacks()
 
@@ -51,7 +52,7 @@ class Interface():
         # Go through the class mapping and replace references to the class's
         # with their instances.
         for key, value in self._class_mapping.items():
-            self._class_mapping[key] = value()
+            self._class_mapping[key] = value(self.config)
 
     async def call_command(self, command, *args, **kwargs):
         '''
@@ -60,8 +61,5 @@ class Interface():
         '''
         func, class_name = self._func_mapping[command]
         # Call the actual function passing the instance of the
-        # class as the first argument. 
+        # class as the first argument.
         return await func(self._class_mapping[class_name], *args, **kwargs)
-
-
-interface = Interface()
