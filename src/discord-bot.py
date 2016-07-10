@@ -42,7 +42,7 @@ async def on_message(message):
 
 
 def main():
-    config_path = 'bots.yaml'
+    config_path = '../conf/bots.yaml'
     config = yaml.load(open(config_path).read())
     client.interface = interface.Interface(config)
     client.commands = config['common-actions']

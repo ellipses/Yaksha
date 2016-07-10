@@ -12,7 +12,7 @@ class MyClient(object):
         self.bot = bot
         self.nick = self.bot.get_nick()
         self.channels = ['#tomtest']
-        config_path = 'bots.yaml'
+        config_path = '../conf/bots.yaml'
         self.config = yaml.load(open(config_path).read())
 
         self.interface = interface.Interface(self.config)
