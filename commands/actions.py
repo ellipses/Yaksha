@@ -48,6 +48,7 @@ class Streams():
 
         return message
 
+    @register('!whens')
     async def display_stream_list(self, msg, user, *args):
         channels = self.get_channels()
         channel_list = (',').join(channels.split(' '))
@@ -228,6 +229,7 @@ class Frinkiac():
 
         return (episode, timestamps, caption)
 
+    @register('!simpsons')
     async def get_gif(self, caption, user, *args):
         '''
         Method thats called when trying to get a Frinkiac url.
@@ -241,6 +243,7 @@ class Frinkiac():
         return self.gif_url % (episode,
                                timestamps[0], timestamps[-1])
 
+    @register('!scaption')
     async def get_captioned_gif(self, caption, user):
         '''
         Method thats called when trying to get a gif with
@@ -269,6 +272,7 @@ class Arbitary():
         self.history_limit = 500
         self.mention_regex = r'-(\d)'
 
+    @register('!shuffle')
     async def shuffle(self, sentence, author, *args):
         '''
         '''
@@ -290,6 +294,7 @@ class Arbitary():
         skins_list = yaml.load(open('skins.yaml').read())
         return random.choice(skins_list.split('\n'))
 
+    @register('!mymention')
     async def get_my_mention(self, message, user, channel, client):
         '''
         Shows the last message in the channel that mentioned the user
@@ -366,6 +371,7 @@ class Tourney():
         return tourney_list
 
     #@memoize(60 * 60 * 24)
+    @register('!tourney')
     async def get_tourneys(self, message, author, *args):
         '''
         Uses the list of tournaments on the srk page
@@ -415,6 +421,7 @@ class Gifs():
         self.translate_url = ('http://api.giphy.com/v1/gifs/translate?s='
                               '%s&api_key=dc6zaTOxFJmzC')
 
+    @register('!gif')
     async def get_gif(self, quote, author, *args):
         query = '+'.join(quote.split(' '))
         resp = await get_request(self.search_url % query)
@@ -428,6 +435,7 @@ class Gifs():
         else:
             return 'Got an error when searching for gifs :('
 
+    @register('!tgif')
     def get_translate_gif(self, quote, author, *args):
         query = '+'.join(quote.split(' '))
         resp = requests.get(self.translate_url % query)
@@ -469,6 +477,7 @@ class AddCommands():
                         return value[0]
         return False
 
+    @register('Yaksha: get')
     def get_command(self, msg, user):
         '''
         '''
@@ -481,6 +490,7 @@ class AddCommands():
         else:
             return 'I am too sleepy to write reasonable error message, just stop doing wrong things.'
 
+    @register('!add_cmd')
     def add_command(self, msg, user):
         '''
         Main function that called when a user
@@ -569,6 +579,7 @@ class Reminder():
         difference = parsed_time - now
         return (True, difference, parsed_time)
 
+    @register('!remindme')
     async def set_reminder(self, msg, user, channel, client):
         '''
         Main function that called to set a reminder. Calls the

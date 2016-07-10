@@ -80,10 +80,11 @@ def memoize(cache_time):
 _callbacks = {}
 def register(command):
     '''
+    _Registers_ each function with by storing the command its name
+    into a dict.
     '''
     def decorator(func):
-        #print('Registering %s with command %s' % (func.__name__, command))
-        print('blah')
+        print('Registering %s with command %s' % (func.__name__, command))
         _callbacks[command] = (func.__qualname__, func.__module__)
         return func
     return decorator
@@ -91,6 +92,9 @@ def register(command):
 
 def get_callbacks():
     '''
+    Simple getter that returns the dictionary containing
+    the registered functions. Might be better to make
+    registration into a class instead.
     '''
     return _callbacks
 

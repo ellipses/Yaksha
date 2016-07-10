@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from commands import ifgc, voting, actions
+from interface import interface
 import asyncio
 import irc3
 import yaml
@@ -16,31 +16,7 @@ class MyClient(object):
         config_path = 'bots.yaml'
         self.config = yaml.load(open(config_path).read())
 
-        # Reallllyyyy UGLY, need to fix ;(
-        frinkiac = actions.Frinkiac()
-        arbitary = actions.Arbitary()
-        gifs = actions.Gifs()
-        tourney = actions.Tourney()
-        boards = ifgc.Boards()
-        reminders = actions.Reminder()
-        streams = actions.Streams()
-        frames = ifgc.Frames(self.config['frame_data'])
-        commands = actions.AddCommands(self.config['add_commands']['irc'])
-        votes = voting.Voting()
-
-        self.set_reminder = reminders.set_reminder
-        self.simpsons_gif = frinkiac.get_gif
-        self.captioned_gif = frinkiac.get_captioned_gif
-        self.shuffle = arbitary.shuffle
-        self.casuals = boards.get_thread_posters
-        self.tourney = tourney.get_tourneys
-        self.giffy_gif = gifs.get_gif
-        self.get_frames = frames.get_frames
-        self.add_command = commands.add_command
-        self.get_command = commands.get_command
-        self.whens = streams.display_stream_list
-
-        self.start_vote = votes.start_vote
+        self.interface = interface
         self.commands = self.config['common-actions']
 
     @irc3.event(irc3.rfc.CONNECTED)
@@ -81,8 +57,11 @@ class MyClient(object):
                 for command in self.commands.keys():
                     if msg.lower().startswith(command.lower()):
                         msg = msg[len(command):].strip()
-                        response = await getattr(self, self.commands[command])(msg,
-                                                 user,channel, self)
+                        command = command.lower()
+                        response = await self.interface.call_command(command,
+                                                                     msg, user,
+                                                                     channel, self)
+
                         if response:
                             await self.send_message(channel, response)
                         break

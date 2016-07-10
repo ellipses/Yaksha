@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from fuzzywuzzy import process
-from commands.utilities import memoize, get_request
+from commands.utilities import memoize, get_request, register
 from bs4 import BeautifulSoup
 import requests
 import re
@@ -62,6 +62,7 @@ class Boards():
         else:
             return False
 
+    @register('!casuals')
     async def get_thread_posters(self, *args, **kwargs):
         '''
         Main method thats called when trying to get a list of
@@ -207,6 +208,7 @@ class Frames():
                                        data['onBlock'])
         return output
 
+    @register('!frames')
     async def get_frames(self, msg, user, *args):
         '''
         Main method thats called for the frame data function.

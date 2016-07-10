@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from commands.utilities import register
 import asyncio
 import re
 
@@ -128,6 +129,7 @@ class Voting():
         # Delete the dictionary entry now that the vote is finished.
         del self.active_votes[channel]
 
+    @register('!vote')
     async def start_vote(self, msg, user, channel, client):
         '''
         Main function that handles the vote function. Makes sure
