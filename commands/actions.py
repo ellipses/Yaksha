@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from commands.utilities import rate_limit, memoize, get_request
+from commands.utilities import rate_limit, memoize, get_request, register
 from dateparser.date import DateDataParser
 from datetime import datetime, timedelta
 from fuzzywuzzy import process
@@ -592,4 +592,3 @@ class Reminder():
             await self.start_reminder_sleep(parsed_msg[1], user,
                                             channel, client, reminder_txt,
                                             parsed_msg[2])
-

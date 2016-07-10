@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from datetime import datetime, timedelta
 from functools import wraps
+import functools
 import aiohttp
 import time
 
@@ -74,6 +75,24 @@ def memoize(cache_time):
 
         return func_wrapper
     return memoize_decorator
+
+
+_callbacks = {}
+def register(command):
+    '''
+    '''
+    def decorator(func):
+        #print('Registering %s with command %s' % (func.__name__, command))
+        print('blah')
+        _callbacks[command] = (func.__qualname__, func.__module__)
+        return func
+    return decorator
+
+
+def get_callbacks():
+    '''
+    '''
+    return _callbacks
 
 
 async def get_request(url):
