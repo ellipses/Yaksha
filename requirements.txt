@@ -19,4 +19,4 @@ six==1.10.0
 tornado==4.3
 umalqurra==0.2
 websockets==3.1
-git+ssh://git@github.com/Shizmob/pydle.git#egg=pydle
+irc3
