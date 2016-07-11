@@ -3,6 +3,7 @@ from fuzzywuzzy import process
 from commands.utilities import memoize, get_request, register
 from bs4 import BeautifulSoup
 import requests
+import json
 import re
 
 
