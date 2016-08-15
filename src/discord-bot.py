@@ -1,10 +1,12 @@
 #!/usr/bin/python
+
 import interface
 import logging
 import discord
 import asyncio
 import re
 import yaml
+import os
 
 global client
 client = discord.Client()
@@ -42,7 +44,8 @@ async def on_message(message):
 
 
 def main():
-    config_path = '../conf/bots.yaml'
+    config_path = os.path.join(os.path.dirname(__file__), 
+                               '../conf/bots.yaml')
     config = yaml.load(open(config_path).read())
     client.interface = interface.Interface(config)
     client.commands = config['common-actions']
