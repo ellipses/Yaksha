@@ -1,13 +1,14 @@
 #!/usr/bin/python
 from commands import ifgc, voting, actions
 from commands import utilities
-
+import re
 
 class Interface():
 
     def __init__(self, config={}):
         self._func_mapping = {}
         self._class_mapping = {}
+        self.no_cache_pattern = r'--nocache'
         self._modules = [ifgc, voting, actions]
         self.config = config
         self.remap_functions()
@@ -54,12 +55,19 @@ class Interface():
         for key, value in self._class_mapping.items():
             self._class_mapping[key] = value(self.config)
 
-    async def call_command(self, command, *args, **kwargs):
+    async def call_command(self, command, msg, *args, **kwargs):
         '''
         Determines which function to call from the func_mapping
         dict using the command arg as the key.
+        Also allows you to 'refresh' the cache by passing '--nocache' in 
+        the message.
         '''
         func, class_name = self._func_mapping[command]
+        # Check if we shouldn't use the cache.
+        if re.search(self.no_cache_pattern, msg):
+            msg = re.sub(self.no_cache_pattern, '', msg).strip()
+            kwargs.update({'no_cache': True})
         # Call the actual function passing the instance of the
         # class as the first argument.
-        return await func(self._class_mapping[class_name], *args, **kwargs)
+        return await func(self._class_mapping[class_name], msg,
+                          *args, **kwargs)

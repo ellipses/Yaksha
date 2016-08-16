@@ -60,7 +60,14 @@ def memoize(cache_time):
     def memoize_decorator(func):
         @wraps(func)
         async def func_wrapper(*args, **kwargs):
-            if func in _cache:
+            '''
+            Returns the cached value if it exists and otherwise
+            it evalues the function and stores it in the cache.
+            no_cache=True can be passed to the function to prevent
+            retrieving from the cache.
+            '''
+            no_cache = kwargs.get('no_cache', False)
+            if func in _cache and not no_cache:
                 stored_time = _cache[func][1]
 
                 if time.time() - stored_time > cache_time:

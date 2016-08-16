@@ -109,22 +109,25 @@ class Frames():
                               'st': 'stand ',
                               'jp': 'jump '}
         self.short_regex = r'(^cr(\s|\.))|(^st(\s|\.))|(^jp(\s|\.))'
-        self.output_format = ('%s - (%s) - [Startup]: %s [Active]: %s [Recovery]: %s '
+        self.output_format = ('%s - (%s - %s) - [Startup]: %s [Active]: %s [Recovery]: %s '
                               '[On Hit]: %s [On Block]: %s')
+        self.stats_format = '%s - [%s] - %s'
+        self.knockdown_format = ' [KD Adv]: %s [Quick Rise Adv]: %s [Back Rise Adv]: %s '
 
-    #@memoize(60 * 60 * 24 * 7)
-    async def get_data(self):
+    @memoize(60 * 60 * 24 * 7)
+    async def get_data(self, **kwargs):
         '''
         Simple helper function that hits the frame data dump
         endpoint and returns the contents in json format.
         '''
         resp = await get_request(self.url)
         if resp:
-            return json.loads(resp)
+            frame_data = json.loads(resp)
+            self.add_reverse_mapping(frame_data)
+            return frame_data
         else:
             return False
 
-    #@memoize(60 * 60 * 24 * 7)
     def add_reverse_mapping(self, data):
         '''
         Create a reverse mapping between common names,
@@ -135,6 +138,7 @@ class Frames():
         common_name_dict = {}
         commands_dict = {}
         for char in data.keys():
+            #import pdb;pdb.set_trace()
             char_moves = data[char]['moves']['normal']
             for move in char_moves:
                 # Add the common name of the move to the dict.
@@ -152,6 +156,13 @@ class Frames():
             # Also add a set of keys/values with official name
             offical_names = dict(zip(char_moves.keys(), char_moves.keys()))
             data[char]['reverse_mapping'].update(offical_names)
+            # Add the stats of the char to the mapping as well. The extra value
+            # 'char_stat' is added to later determine if the matched move is a
+            # stat or not.
+            stats_mapping = {stat: (value, 'char_stat')
+                             for stat, value in data[char]['stats'].items()}
+            data[char]['reverse_mapping'].update(stats_mapping)
+            #
             common_name_dict = {}
             commands_dict = {}
 
@@ -185,32 +196,49 @@ class Frames():
 
         move = data[char_match]['reverse_mapping'][move_match]
 
-        # Next find the move they want.
-        if vt:
-            # The move might not have any difference in vtrigger
-            # so just return the normal version.
-            try:
-                move_data = data[char_match]['moves']['vtrigger'][move]
-            except KeyError:
-                move_data = data[char_match]['moves']['normal'][move]
+        # Check if the matched name was a char stat or a move.
+        if 'char_stat' in move:
+            return  char_match, move_match, move
         else:
-            move_data = data[char_match]['moves']['normal'][move]
+            # Find the move they want.
+            if vt:
+                # The move might not have any difference in vtrigger
+                # so just return the normal version.
+                try:
+                    move_data = data[char_match]['moves']['vtrigger'][move]
+                except KeyError:
+                    move_data = data[char_match]['moves']['normal'][move]
+            else:
+                move_data = data[char_match]['moves']['normal'][move]
 
-        return char_match, move, move_data
+            return char_match, move, move_data
 
     def format_output(self, char, move, vt, data):
         '''
         Formats the msg to a nicely spaced string for
         presentation.
         '''
-        output = self.output_format % (char, move,
-                                       data['startup'], data['active'],
-                                       data['recovery'], data['onHit'],
-                                       data['onBlock'])
+        if 'char_stat' in data:
+            output = self.stats_format % (char, move, data[0])
+        else:
+            # Have to parse knockdown advantage frames if it causes one.
+            if data['onHit'] == 'KD':
+                mg_format = self.output_format + self.knockdown_format
+                output = mg_format % (char, move, data['plainCommand'],
+                                      data['startup'], data['active'],
+                                      data['recovery'], data['onHit'],
+                                      data['onBlock'], data['kd'],
+                                      data['kdr'], data['kdrb'])
+
+            else:
+                output = self.output_format % (char, move, data['plainCommand'],
+                                               data['startup'], data['active'],
+                                               data['recovery'], data['onHit'],
+                                               data['onBlock'])
         return output
 
     @register('!frames')
-    async def get_frames(self, msg, user, *args):
+    async def get_frames(self, msg, user, *args, **kwargs):
         '''
         Main method thats called for the frame data function.
         Currently works only for SFV data thanks to Pauls nicely
@@ -229,12 +257,9 @@ class Frames():
         else:
             vtrigger = False
 
-        frame_data = await self.get_data()
+        frame_data = await self.get_data(**kwargs)
         if not frame_data:
             return 'Got an error when trying to get frame data :(.'
-        else:
-            result = re.search(self.regex, msg)
-            self.add_reverse_mapping(frame_data)
 
         matched_value = self.match_move(char_name, move_name,
                                         vtrigger, frame_data)
