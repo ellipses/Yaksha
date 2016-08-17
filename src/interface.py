@@ -5,12 +5,13 @@ import re
 
 class Interface():
 
-    def __init__(self, config={}):
+    def __init__(self, config, commands):
         self._func_mapping = {}
         self._class_mapping = {}
         self.no_cache_pattern = r'--nocache'
         self._modules = [ifgc, voting, actions]
         self.config = config
+        self.registered_commands = commands
         self.remap_functions()
 
     def remap_functions(self):
@@ -52,8 +53,8 @@ class Interface():
 
         # Go through the class mapping and replace references to the class's
         # with their instances.
-        for key, value in self._class_mapping.items():
-            self._class_mapping[key] = value(self.config)
+        for name, instance in self._class_mapping.items():
+            self._class_mapping[name] = instance(self.config)
 
     async def call_command(self, command, msg, *args, **kwargs):
         '''
@@ -67,6 +68,11 @@ class Interface():
         if re.search(self.no_cache_pattern, msg):
             msg = re.sub(self.no_cache_pattern, '', msg).strip()
             kwargs.update({'no_cache': True})
+
+        # Special case if its the help command that requires you
+        # to pass in the available commands.
+        if command == '!help':
+            kwargs['commands_dict'] = self.registered_commands
         # Call the actual function passing the instance of the
         # class as the first argument.
         return await func(self._class_mapping[class_name], msg,

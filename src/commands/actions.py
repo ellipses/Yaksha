@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from commands.utilities import rate_limit, memoize, get_request, register
+from commands.utilities import rate_limit, memoize, get_request, register, get_callbacks
 from dateparser.date import DateDataParser
 from datetime import datetime, timedelta
 from fuzzywuzzy import process
@@ -604,3 +604,31 @@ class Reminder():
             await self.start_reminder_sleep(parsed_msg[1], user,
                                             channel, client, reminder_txt,
                                             parsed_msg[2])
+
+
+class Help():
+
+    def __init__(self, config={}):
+        self.config = config
+        self.cmd_ratio_thresh = 80
+
+    @register('!help')
+    async def get_help_message(self, msg, *args, **kwargs):
+        available_commands = kwargs.get('commands_dict', False)
+
+        if available_commands:
+            # Try fuzzy matching on the msg to determine the cmd
+            # the user is trying to get help on.
+            cmd, ratio = process.extractOne(msg, available_commands.keys())
+            
+            # If the ratio is too low we assume the user made
+            # an error.
+            if ratio < self.cmd_ratio_thresh:
+                return ('Allows you to get help on a command. The avaliable'
+                        ' commands are ```%s```' % list(available_commands.keys()))
+            else:
+                return available_commands[cmd]
+        else:
+            return 'Dict of commands missing :/ .'
+
+

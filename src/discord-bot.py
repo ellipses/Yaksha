@@ -47,10 +47,10 @@ def main():
     config_path = os.path.join(os.path.dirname(__file__), 
                                '../conf/bots.yaml')
     config = yaml.load(open(config_path).read())
-    client.interface = interface.Interface(config)
     client.commands = config['common-actions']
     client.commands.update(config['discord-actions'])
-    
+    client.interface = interface.Interface(config, client.commands)
+
     token = config['discord']['token']
     client.run(token)
 

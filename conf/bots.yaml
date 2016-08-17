@@ -17,21 +17,52 @@ add_commands:
 arbitary:
   skins: filename
 common-actions:
-  '!gif': 'giffy_gif'
-  '!frames': 'get_frames'
-  '!casuals': 'casuals'
-  '!tourney': 'tourney'
-  '!scaption': 'captioned_gif'
-  '!simpsons': 'simpsons_gif'
-  '!vote': 'start_vote'
-  '!remindme': 'set_reminder'  
-  '!whens': 'whens'
-  '!shuffle': 'shuffle'
+  # commands: Help text
+  '!gif': >
+    Returns the most relevant gif for the caption using Giffy.
+    Usage ```!gif obama mic drop```
+  '!frames': >
+    Get SFV frame data for the specified char and move. also
+    works with stats of the char like fdash, bdash, throw range etc.
+    Usage: ```!frames Ryu cr.mk``` ```!frames Nash phrase```
+  '!casuals': >
+    Gets the most recently posted casuals thread and the
+    people who posted in it. Usage ```!tourney```
+  '!tourney': >
+    Gets list the upcomming 5 most recent tournies.
+    Usage ```!tourney```
+  '!scaption': >
+    Same as !simpsons but also displays the caption in the
+    obtained gif. Usage ```!scaption nothing at all```
+  '!simpsons': >
+    Get a simpsons gif that matches the specified caption. 
+    Usage```!simpsons nothing at all```. 
+    Can also use ```!simpsons-ex[optional time in seconds]```
+    were it will extend the gif by the specified seconds.
+  '!vote': >
+    Start a vote in the channel for the specified length and
+    topic. Usage ```!vote[--time] Vote topic [parameter1, parm2] ``` '
+  '!remindme': >
+    Get Yaksha to remind to at a specified time.
+    Usage ```!remindme <time period> [optional string]```
+  '!whens': 'Get status of registered streams. Usage ```!whens```'
+  '!shuffle': >
+    Randomly select a word from a supplied list of words.
+    Usage ```!shuffle yes no maybe```'
+  '!help': 'Get help on a command. Usage ```!help command_name```'
 irc-actions:
 discord-actions:
-  '!tgif': 'translate_gif' 
-  '!skins': 'skins'
-  '!add_channel': 'add_stream'
-  '!add_cmd': 'add_command'
-  'Yaksha: get': 'get_command'
-  '!mymention': 'my_mention'
+  '!tgif': 'whats this crap' 
+  '!skins': 'For fergus'
+  '!add_channel': >
+    Add a stream to the list of streams thats checked when
+    using !whens. Usage ```!add_channel teamspooky```
+
+  '!add_cmd': >
+    Create a command to return a specific string.
+    Usage ```!add_cmd [command_name] 
+    some_long_or_short_string_can_be_link```
+  'Yaksha: get': >
+    Get the string corresponding to the saved command.
+    Usage: ```Yaksha: get command_name```
+
