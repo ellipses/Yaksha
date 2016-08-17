@@ -3,6 +3,7 @@ import interface
 import asyncio
 import irc3
 import yaml
+import os
 
 
 @irc3.plugin
@@ -12,10 +13,17 @@ class MyClient(object):
         self.bot = bot
         self.nick = self.bot.get_nick()
         self.channels = ['#tomtest']
-        config_path = '../conf/bots.yaml'
+        config_path = os.path.join(os.path.dirname(__file__),
+                                   '../conf/bots.yaml')
         self.config = yaml.load(open(config_path).read())
 
-        self.commands = self.config['common-actions']
+        self.commands = self.config['common_actions']
+        irc_commands = self.config['irc_actions']
+        admin_commands = self.config['admin_actions']
+        if irc_commands:
+            self.commands.update(irc_commands)
+        if admin_commands:
+            self.commands.update(admin_commands)
         self.interface = interface.Interface(self.config, self.commands)
 
     @irc3.event(irc3.rfc.CONNECTED)

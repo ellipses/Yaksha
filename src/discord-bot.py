@@ -44,11 +44,18 @@ async def on_message(message):
 
 
 def main():
-    config_path = os.path.join(os.path.dirname(__file__), 
+    config_path = os.path.join(os.path.dirname(__file__),
                                '../conf/bots.yaml')
     config = yaml.load(open(config_path).read())
-    client.commands = config['common-actions']
-    client.commands.update(config['discord-actions'])
+    client.commands = config['common_actions']
+    discord_commands = config['discord_actions']
+    admin_commands = config['admin_actions']
+
+    if discord_commands:
+        client.commands.update(discord_commands)
+    if admin_commands:
+        client.commands.update(admin_commands)
+
     client.interface = interface.Interface(config, client.commands)
 
     token = config['discord']['token']
