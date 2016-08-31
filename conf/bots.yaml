@@ -24,7 +24,8 @@ common-actions:
   '!frames': >
     Get SFV frame data for the specified char and move. also
     works with stats of the char like fdash, bdash, throw range etc.
-    Usage: ```!frames Ryu cr.mk``` ```!frames Nash phrase```
+    Use optional parameter -v for more info on the move.
+    Usage: ```!frames Ryu cr.mk``` ```!frames Nash phrase``` ```!frames-v Ryu shoryu```
   '!casuals': >
     Gets the most recently posted casuals thread and the
     people who posted in it. Usage ```!tourney```
