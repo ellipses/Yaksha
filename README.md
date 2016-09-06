@@ -6,7 +6,7 @@ A custom interface.py class is used instead of the discord cog extension to prov
 
 ## Running the bot
 
-While its possible to self host the bot, I would prefer if you invited the bot to your channel using [invite link](https://www.google.com).
+While its possible to self host the bot, I would prefer if you invited the bot to your channel using [invite link](https://discordapp.com/oauth2/authorize?client_id=194156698150240257&scope=bot&permissions=0x00000c00).
 
 ## Commands
 
