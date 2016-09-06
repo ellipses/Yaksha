@@ -1,5 +1,4 @@
 #!/usr/bin/python
-
 import interface
 import logging
 import discord
@@ -8,9 +7,7 @@ import re
 import yaml
 import os
 
-global client
 client = discord.Client()
-
 
 @client.event
 async def on_ready():
@@ -47,8 +44,8 @@ def main():
     config_path = os.path.join(os.path.dirname(__file__), 
                                '../conf/bots.yaml')
     config = yaml.load(open(config_path).read())
-    client.commands = config['common-actions']
-    client.commands.update(config['discord-actions'])
+    client.commands = config['common_actions']
+    client.commands.update(config.get('discord_actions', {})
     client.interface = interface.Interface(config, client.commands)
 
     token = config['discord']['token']

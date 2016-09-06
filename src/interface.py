@@ -1,26 +1,38 @@
 #!/usr/bin/python
+'''
+Module that functions as an interface between the commands and the irc/discord
+libaries. Provides a common inteface that allows the commands to function the
+same regardless of which version of the bot is instantiated.
+
+There are two main components to the interface class. remap_functions which
+creates a dictionary of commands and the functions and call_command which
+handles each valid command received by the bot. 
+'''
 from commands import ifgc, voting, actions
 from commands import utilities
 import re
 
 class Interface():
 
-    def __init__(self, config, commands):
+    def __init__(self, config, bot_commands):
         self._func_mapping = {}
         self._class_mapping = {}
         self.no_cache_pattern = r'--nocache'
         self._modules = [ifgc, voting, actions]
         self.config = config
-        self.registered_commands = commands
+        self.registered_commands = bot_commands
+
         self.remap_functions()
 
     def remap_functions(self):
         '''
-        We replace the value for each dictionary key from containing
-        a function name to a tuple containing a reference to the
-        function and a the name of the class it belongs to. The
-        class name is used to select the correct class from the
-        class_mapping dictionary.
+        Utilities.get_callbacks() returns a dictionary mapping of
+        each command with the name of the function to be called.
+
+        The name of the function is replaced by this function
+        with a reference to the function and the class it belongs
+        to. This is later used by self.call_command when handling 
+        messages.
         '''
         name_mapping = utilities.get_callbacks()
 
@@ -51,7 +63,7 @@ class Interface():
                     # iterations.
                     break
 
-        # Go through the class mapping and replace references to the class's
+        # Go through the class mapping and replace references to the classes
         # with their instances.
         for name, instance in self._class_mapping.items():
             self._class_mapping[name] = instance(self.config)
