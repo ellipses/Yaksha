@@ -19,11 +19,11 @@ A sample of the commands available to the bot, see [config file](conf/bots.yaml)
     topic, and options. ```!vote[--time] Vote topic [parameter1, parm2] ```  
 * '!remindme': 
     Get Yaksha to remind to at a specified time similar to slackbot. ```!remindme <time period> [optional string]```
-* '!whens': 'Get status of registered streams. Usage ```!whens```'
+* '!whens': 'Get status of registered streams. Usage ```!whens```
 * '!shuffle': >
     Randomly select a word from a supplied list of words.
-    Usage ```!shuffle yes no maybe```'
-* '!help': 'Get help on a command. Usage ```!help command_name```'
+    Usage ```!shuffle yes no maybe```
+* '!help': 'Get help on a command. Usage ```!help command_name```
 
   
 
