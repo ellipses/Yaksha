@@ -15,7 +15,8 @@ class MyClient(object):
         config_path = '../conf/bots.yaml'
         self.config = yaml.load(open(config_path).read())
 
-        self.commands = self.config['common-actions']
+        self.commands = self.config['common_actions']
+        self.commands.update(config.get('irc_actions', {}))
         self.interface = interface.Interface(self.config, self.commands)
 
     @irc3.event(irc3.rfc.CONNECTED)
