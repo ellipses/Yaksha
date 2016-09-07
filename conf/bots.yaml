@@ -40,7 +40,7 @@ common_actions:
   '!shuffle': >
     Randomly select a word from a supplied list of words.
     Usage ```!shuffle yes no maybe```'
-  '!help': 'Get help on a command. Usage ```!help command_name```'
+  '?help': 'Get help on a command. Usage ```?help command_name```'
   '!skins': 'For fergus'
   '!add_channel': >
     Add a stream to the list of streams thats checked when

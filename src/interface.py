@@ -83,7 +83,7 @@ class Interface():
 
         # Special case if its the help command that requires you
         # to pass in the available commands.
-        if command == '!help':
+        if command == '?help':
             kwargs['commands_dict'] = self.registered_commands
         # Call the actual function passing the instance of the
         # class as the first argument.

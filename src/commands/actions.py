@@ -612,7 +612,7 @@ class Help():
         self.config = config
         self.cmd_ratio_thresh = 80
 
-    @register('!help')
+    @register('?help')
     async def get_help_message(self, msg, *args, **kwargs):
         available_commands = kwargs.get('commands_dict', False)
 
