@@ -24,6 +24,10 @@ class Interface():
 
         self.remap_functions()
 
+        self.blacklisted_users = self.get_blacklisted_users()
+        self.admin_actions = self.config.get('admin_actions', {}).keys()
+        self.admins = self.config.get('admins', [])
+
     def remap_functions(self):
         '''
         Utilities.get_callbacks() returns a dictionary mapping of
@@ -68,24 +72,74 @@ class Interface():
         for name, instance in self._class_mapping.items():
             self._class_mapping[name] = instance(self.config)
 
-    async def call_command(self, command, msg, *args, **kwargs):
+    async def call_command(self, command, msg, user, *args, **kwargs):
         '''
         Determines which function to call from the func_mapping
         dict using the command arg as the key.
-        Also allows you to 'refresh' the cache by passing '--nocache' in 
+        Also allows you to 'refresh' the cache by passing '--nocache' in
         the message.
         '''
         func, class_name = self._func_mapping[command]
-        # Check if we shouldn't use the cache.
-        if re.search(self.no_cache_pattern, msg):
-            msg = re.sub(self.no_cache_pattern, '', msg).strip()
-            kwargs.update({'no_cache': True})
+        # First check if the user is allowed to call this
+        # function.
+        if self.user_has_permission(user, command):
 
-        # Special case if its the help command that requires you
-        # to pass in the available commands.
-        if command == '?help':
-            kwargs['commands_dict'] = self.registered_commands
-        # Call the actual function passing the instance of the
-        # class as the first argument.
-        return await func(self._class_mapping[class_name], msg,
-                          *args, **kwargs)
+            # Check if we shouldn't use the cache.
+            if re.search(self.no_cache_pattern, msg):
+                msg = re.sub(self.no_cache_pattern, '', msg).strip()
+                kwargs['no_cache'] = True
+
+            # Special case if its the help command that requires you
+            # to pass in the available commands.
+            if command == '?help':
+                kwargs['commands_dict'] = self.registered_commands
+            # Another special case for the blacklist commands that requires
+            # current list of blacklisted to be passed in so it can be updated.
+            # Could instead have a seperate thread that periodically reads from
+            # the file to update it, not sure. Suggestions welcome.
+            elif command in ['!blacklist', '!unblacklist']:
+                kwargs['blacklisted_users'] = self.blacklisted_users
+            # Call the actual function passing the instance of the
+            # class as the first argument.
+            return await func(self._class_mapping[class_name], msg, user,
+                              *args, **kwargs)
+
+    def user_has_permission(self, user, command):
+        '''
+        Performs various checks on the user and the
+        command to determine if they're allowed to use it.
+        '''
+        discord_regex = r'<@([0-9]+)>'
+        # Determine if the requst is done by discord or irc bot        
+        regex_match = re.match(discord_regex, user)
+        if regex_match:
+            uid = regex_match.group(1)
+        else:
+            # If its irc the user is in the format
+            # username@ip. We use the ip to uniquely identify them.
+            uid = user.split('@')[1]
+
+        # Check if the user has been blacklisted.
+        if uid in self.blacklisted_users:
+            return False
+        # Check if the user is an admin and if the command is
+        # an admin command.
+        if command in self.admin_actions and uid not in self.admins:
+            return False
+        # User passed all the tests so they're allowed to
+        # call the function.
+        return True
+
+    def get_blacklisted_users(self):
+        '''
+        Updates the in-memory list of blacklisted users when
+        the bot starts up.
+        '''
+        try:
+            with open(self.config['blacklist_file'], 'r') as f:
+                users = f.readlines()
+        except IOError:
+            return []
+
+        # Return the list of users after stripping the new line char.
+        return [user[:-2] for user in users]

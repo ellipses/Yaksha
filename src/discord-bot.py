@@ -36,16 +36,21 @@ async def on_message(message):
                                                            message.channel,
                                                            client)
             if response:
+                # Append the message with zero with white space char to
+                # avoid bot loops. 
+                response = '\u200B' + response
                 await client.send_message(message.channel, response)
             break
 
 
 def main():
-    config_path = os.path.join(os.path.dirname(__file__), 
+    config_path = os.path.join(os.path.dirname(__file__),
                                '../conf/bots.yaml')
     config = yaml.load(open(config_path).read())
-    client.commands = config['common_actions']
+    client.commands = config.get('common_actions', {})
     client.commands.update(config.get('discord_actions', {}))
+    client.commands.update(config.get('admin_actions', {}))
+
     client.interface = interface.Interface(config, client.commands)
 
     token = config['discord']['token']
