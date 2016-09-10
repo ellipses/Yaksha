@@ -29,7 +29,17 @@ common_actions:
     Get a simpsons gif that matches the specified caption. 
     Usage```!simpsons nothing at all```. 
     Can also use ```!simpsons-ex[optional time in seconds]```
-    were it will extend the gif by the specified seconds.
+    where it will extend the gif by the specified seconds.
+    Gets the longest gif possible if no time is specified.
+  '!fcaption': >
+    Same as !futurama but also displays the caption in the
+    obtained gif. Usage ```!fcaption Oh you're serious let me laugh even harder.```
+  '!futurama': >
+    Get a futurama gif that matches the specified caption. 
+    Usage```!futurama Oh you're serious let me laugh even harder.```. 
+    Can also use ```!futurama-ex[optional time in seconds]```
+    where it will extend the gif by the specified seconds. Gets the
+    longest gif possible if no time is specified.
   '!vote': >
     Start a vote in the channel for the specified length and
     topic. Usage ```!vote[--time] Vote topic [parameter1, parm2] ``` '

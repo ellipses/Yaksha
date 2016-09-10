@@ -45,7 +45,7 @@ def main():
                                '../conf/bots.yaml')
     config = yaml.load(open(config_path).read())
     client.commands = config['common_actions']
-    client.commands.update(config.get('discord_actions', {})
+    client.commands.update(config.get('discord_actions', {}))
     client.interface = interface.Interface(config, client.commands)
 
     token = config['discord']['token']
