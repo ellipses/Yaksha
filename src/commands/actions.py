@@ -63,13 +63,10 @@ class Streams():
             return False
 
 
-class Frinkiac():
+class Shows():
 
     def __init__(self, config={}):
         # gif/episode/start_timestamp/end_timestamp.gif?b64lines=caption_in_base64
-        self.gif_url = 'https://frinkiac.com/gif/%s/%s/%s.gif'
-        self.caption_url = 'https://frinkiac.com/gif/%s/%s/%s.gif?b64lines=%s'
-        self.api_url = 'https://frinkiac.com/api/search?q=%s'
         self.interval = 500
         self.max_count = 31
         self.max_timespan = 6800
@@ -174,10 +171,9 @@ class Frinkiac():
             formated_msg += ' %s' % word
             if char_buff >= 20:
                 char_buff = 0
-                formated_msg += '/n'
+                formated_msg += u"\u000A"
 
         return formated_msg
-
 
     async def handle_caption(self, caption):
         '''
@@ -230,8 +226,7 @@ class Frinkiac():
 
         return (episode, timestamps, caption)
 
-    @register('!simpsons')
-    async def get_gif(self, caption, user, *args):
+    async def get_gif(self, caption, user, *args, **kwargs):
         '''
         Method thats called when trying to get a Frinkiac url.
         Does basic error handling and calls handle_caption
@@ -244,8 +239,7 @@ class Frinkiac():
         return self.gif_url % (episode,
                                timestamps[0], timestamps[-1])
 
-    @register('!scaption')
-    async def get_captioned_gif(self, caption, user):
+    async def get_captioned_gif(self, caption, user, *args, **kwargs):
         '''
         Method thats called when trying to get a gif with
         a caption. Does basic error handling and base 64 
@@ -256,13 +250,47 @@ class Frinkiac():
             return 'Try fixing your quote.'
 
         episode, timestamps, caption = resp
-        # caption = self.format_message(caption)
+        caption = self.format_message(caption)
         try:
             encoded = str(base64.b64encode(str.encode(caption)), 'utf-8')
         except TypeError:
             encoded = str(base64.b64encode(str.encode(caption)))
         return self.caption_url % (episode, timestamps[0],
                                    timestamps[-1], encoded)
+
+
+class Simpsons(Shows):
+
+    def __init__(self, config={}):
+        super(Simpsons, self).__init__(config)
+        self.gif_url = 'https://frinkiac.com/gif/%s/%s/%s.gif'
+        self.caption_url = 'https://frinkiac.com/gif/%s/%s/%s.gif?b64lines=%s'
+        self.api_url = 'https://frinkiac.com/api/search?q=%s'
+
+    @register('!simpsons')
+    async def get_simpsons_gif(self, *args, **kwargs):
+        return await super(Simpsons, self).get_gif(*args, **kwargs)
+
+    @register('!scaption')
+    async def get_captioned_simpsons_gif(self, *args, **kwargs):
+        return await super(Simpsons, self).get_captioned_gif(self, *args, **kwargs)
+
+
+class Futurama(Shows):
+
+    def __init__(self, config={}):
+        super(Futurama, self).__init__(config)
+        self.gif_url = 'https://morbotron.com/gif/%s/%s/%s.gif'
+        self.caption_url = 'https://morbotron.com/gif/%s/%s/%s.gif?b64lines=%s'
+        self.api_url = 'https://morbotron.com/api/search?q=%s'
+
+    @register('!futurama')
+    async def get_futurame_gif(self, *args, **kwargs):
+        return await super(Futurama, self).get_gif(*args, **kwargs)
+
+    @register('!fcaption')
+    async def get_captioned_futurama_gif(self, *args, **kwargs):
+        return await super(Futurama, self).get_captioned_gif(*args, **kwargs)
 
 
 class Arbitary():
@@ -652,7 +680,7 @@ class Blacklist():
 
         users = [user + '\n' for user in users]
         async with aiofiles.open(self.blacklist_file, mode='a') as f:
-            f.writelines(users)
+            await f.writelines(users)
 
     @register('!unblacklist')
     async def unblacklist(self, message, *args, **kwargs):
@@ -668,11 +696,10 @@ class Blacklist():
             del blacklisted_users[blacklisted_users.index(user)]
 
         users = [user + '\n' for user in users]
-        async with aiofiles.open(self.blacklist_file, mode='r+') as f:
-            saved_users = f.readlines()
-            for user in users
+        async with aiofiles.open(self.blacklist_file, mode='r') as f:
+            saved_users = await f.readlines()
+            for user in users:
                 del saved_users[saved_users.index(user)]
 
-            f.writelines(saved_users)
-
-
+        async with aiofiles.open(self.blacklist_file, mode='w') as f:
+            await f.writelines(saved_users)
