@@ -1,12 +1,11 @@
 discord:
-  token: MTk0MTU2NzMwMjI4Mjc3MjQ4.CkikCg.NDRe0hFxOu_RGHenDordH-U6nQo
-  admins: 
-    'admin id'
+  token: 'fake_token'
 frame_data:
   url: 'someurl'
+blacklist_file: 'blacklist_file.txt'
 twitch:
-irc:
-  admin: 'some admin name'
+admins: 
+  - 'some admin name'
 frinkiac:
     # 31 * 200
     max_timespan: 6200 
@@ -27,7 +26,8 @@ common_actions:
   '!frames': >
     Get SFV frame data for the specified char and move. also
     works with stats of the char like fdash, bdash, throw range etc.
-    Usage: ```!frames Ryu cr.mk``` ```!frames Nash phrase```
+    Use optional parameter -v for more info on the move.
+    Usage: ```!frames Ryu cr.mk``` ```!frames Nash phrase``` ```!frames-v Ryu shoryu```
   '!casuals': >
     Gets the most recently posted casuals thread and the
     people who posted in it. Usage ```!tourney```
@@ -52,8 +52,7 @@ common_actions:
   '!shuffle': >
     Randomly select a word from a supplied list of words.
     Usage ```!shuffle yes no maybe```'
-  '!help': 'Get help on a command. Usage ```!help command_name```'
-  '!tgif': 'whats this crap' 
+  '?help': 'Get help on a command. Usage ```?help command_name```'
   '!skins': 'For fergus'
   '!add_channel': >
     Add a stream to the list of streams thats checked when
@@ -65,9 +64,3 @@ common_actions:
   'Yaksha: get': >
     Get the string corresponding to the saved command.
     Usage: ```Yaksha: get command_name```
-irc_actions:
-discord_actions:
-admin_actions:
-
-
-

@@ -1,5 +1,4 @@
 #!/usr/bin/python
-
 import interface
 import logging
 import discord
@@ -8,9 +7,7 @@ import re
 import yaml
 import os
 
-global client
 client = discord.Client()
-
 
 @client.event
 async def on_ready():
@@ -39,6 +36,9 @@ async def on_message(message):
                                                            message.channel,
                                                            client)
             if response:
+                # Append the message with zero with white space char to
+                # avoid bot loops. 
+                response = '\u200B' + response
                 await client.send_message(message.channel, response)
             break
 
@@ -47,14 +47,10 @@ def main():
     config_path = os.path.join(os.path.dirname(__file__),
                                '../conf/bots.yaml')
     config = yaml.load(open(config_path).read())
-    client.commands = config['common_actions']
-    discord_commands = config['discord_actions']
-    admin_commands = config['admin_actions']
 
-    if discord_commands:
-        client.commands.update(discord_commands)
-    if admin_commands:
-        client.commands.update(admin_commands)
+    client.commands = config.get('common_actions', {})
+    client.commands.update(config.get('discord_actions', {}))
+    client.commands.update(config.get('admin_actions', {}))
 
     client.interface = interface.Interface(config, client.commands)
 

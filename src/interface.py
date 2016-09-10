@@ -1,29 +1,42 @@
 #!/usr/bin/python
+'''
+Module that functions as an interface between the commands and the irc/discord
+libaries. Provides a common inteface that allows the commands to function the
+same regardless of which version of the bot is instantiated.
+
+There are two main components to the interface class. remap_functions which
+creates a dictionary of commands and the functions and call_command which
+handles each valid command received by the bot. 
+'''
 from commands import ifgc, voting, actions
 from commands import utilities
 import re
 
 class Interface():
 
-    def __init__(self, config, commands):
+    def __init__(self, config, bot_commands):
         self._func_mapping = {}
         self._class_mapping = {}
         self.no_cache_pattern = r'--nocache'
         self._modules = [ifgc, voting, actions]
         self.config = config
-        self.registered_commands = commands
+        self.registered_commands = bot_commands
+
         self.remap_functions()
+
         self.blacklisted_users = []
-        self.admin_actions = self.config['admin_actions'].keys()
-        self.admins = self.config['admins']
+        self.admin_actions = self.config.get('admin_actions', {}).keys()
+        self.admins = self.config.get('admins', [])
 
     def remap_functions(self):
         '''
-        We replace the value for each dictionary key from containing
-        a function name to a tuple containing a reference to the
-        function and a the name of the class it belongs to. The
-        class name is used to select the correct class from the
-        class_mapping dictionary.
+        Utilities.get_callbacks() returns a dictionary mapping of
+        each command with the name of the function to be called.
+
+        The name of the function is replaced by this function
+        with a reference to the function and the class it belongs
+        to. This is later used by self.call_command when handling 
+        messages.
         '''
         name_mapping = utilities.get_callbacks()
 
@@ -54,7 +67,7 @@ class Interface():
                     # iterations.
                     break
 
-        # Go through the class mapping and replace references to the class's
+        # Go through the class mapping and replace references to the classes
         # with their instances.
         for name, instance in self._class_mapping.items():
             self._class_mapping[name] = instance(self.config)
@@ -69,28 +82,34 @@ class Interface():
         func, class_name = self._func_mapping[command]
         # First check if the user is allowed to call this
         # function.
-        if self.check_user_permission(user, command):
+        if self.user_has_permission(user, command):
 
             # Check if we shouldn't use the cache.
             if re.search(self.no_cache_pattern, msg):
                 msg = re.sub(self.no_cache_pattern, '', msg).strip()
-                kwargs.update({'no_cache': True})
+                kwargs['no_cache'] = True
 
             # Special case if its the help command that requires you
             # to pass in the available commands.
-            if command == '!help':
+            if command == '?help':
                 kwargs['commands_dict'] = self.registered_commands
+            # Another special case for the blacklist command that requires
+            # current list of blacklisted to be passed in so it can be updated.
+            # Could instead have a seperate thread that periodically reads from
+            # the file to update it, not sure. Suggestions welcome.
+            if command == '!blacklist':
+                kwargs['blacklisted_users'] = self.blacklisted_users
             # Call the actual function passing the instance of the
             # class as the first argument.
             return await func(self._class_mapping[class_name], msg, user,
                               *args, **kwargs)
 
-    def check_user_permission(self, user, command):
+    def user_has_permission(self, user, command):
         '''
         Performs various checks on the user and the
         command to determine if they're allowed to use it.
         '''
-        # Determine if the requst is done by discord or irc bot.
+        # Determine if the requst is done by discord or irc bot
         try:
             # The user object in discord contains a unique id.
             uid = user.id
@@ -99,13 +118,14 @@ class Interface():
             # username@ip. We use the ip to uniquely identify them.
             uid = user.split('@')[1]
 
-        # If check if the user has been blacklisted.
+        # Check if the user has been blacklisted.
         if uid in self.blacklisted_users:
             return False
-        # Check if the user is an admin if the command is
+        # Check if the user is an admin and if the command is
         # an admin command.
         if command in self.admin_actions and uid not in self.admins:
             return False
         # User passed all the tests so they're allowed to
         # call the function.
-        retrun True
+        return True
+

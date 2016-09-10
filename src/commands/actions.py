@@ -4,6 +4,7 @@ from dateparser.date import DateDataParser
 from datetime import datetime, timedelta
 from fuzzywuzzy import process
 from bs4 import BeautifulSoup
+import aiofiles
 import aiohttp
 import requests
 import asyncio
@@ -612,7 +613,7 @@ class Help():
         self.config = config
         self.cmd_ratio_thresh = 80
 
-    @register('!help')
+    @register('?help')
     async def get_help_message(self, msg, *args, **kwargs):
         available_commands = kwargs.get('commands_dict', False)
 
@@ -630,5 +631,48 @@ class Help():
                 return available_commands[cmd]
         else:
             return 'Dict of commands missing :/ .'
+
+
+class Blacklist():
+
+    def __init__(self, config={}):
+        self.blacklist_file = config.get('blacklist_file')
+
+    @register('!blacklist')
+    async def blacklist(self, message, *args, **kwargs):
+        '''
+        Blacklists the user by adding their 'uid' to the
+        currently maintained list of blacklisted users and updates the file.
+        '''
+        blacklisted_users = kwargs['blacklisted_users']
+        users = message.split(' ')
+        # Remove users who might have already been blacklisted.
+        users = [user for user in users if user not in blacklisted_users]
+        blacklisted_users.extend(users)
+
+        users = [user + '\n' for user in users]
+        async with aiofiles.open(self.blacklist_file, mode='a') as f:
+            f.writelines(users)
+
+    @register('!unblacklist')
+    async def unblacklist(self, message, *args, **kwargs):
+        '''
+        Unblacklists the user by removing their 'uid' from the currently maintained
+        list of blacklisted users and removes it from the file.
+        '''
+        users = message.split(' ')
+        blacklisted_users = kwargs['blacklisted_users']
+        users = [user for user in users if user in blacklisted_users]
+
+        for user in users:
+            del blacklisted_users[blacklisted_users.index(user)]
+
+        users = [user + '\n' for user in users]
+        async with aiofiles.open(self.blacklist_file, mode='r+') as f:
+            saved_users = f.readlines()
+            for user in users
+                del saved_users[saved_users.index(user)]
+
+            f.writelines(saved_users)
 
 

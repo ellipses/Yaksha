@@ -102,6 +102,7 @@ class Frames():
 
     def __init__(self, config={}):
         self.url = config['frame_data']['url']
+        self.info_regex = r'^-v'
         self.regex = r'(^\S*)\s*(vtrigger|vt)?\s+(.+)'
         self.char_ratio_thresh = 65
         self.move_ratio_thresh = 65
@@ -213,7 +214,7 @@ class Frames():
 
             return char_match, move, move_data
 
-    def format_output(self, char, move, vt, data):
+    def format_output(self, char, move, vt, data, verbose=False):
         '''
         Formats the msg to a nicely spaced string for
         presentation.
@@ -235,6 +236,11 @@ class Frames():
                                                data['startup'], data['active'],
                                                data['recovery'], data['onHit'],
                                                data['onBlock'])
+        
+        if verbose and 'extraInfo' in data:
+            info = '```%s```' % ', '.join(data['extraInfo'])
+            output = output + info
+
         return output
 
     @register('!frames')
@@ -244,7 +250,15 @@ class Frames():
         Currently works only for SFV data thanks to Pauls nicely
         formatted data <3.
         '''
+        # Check if they want verbose output.
+        verbose = False
+        info_result = re.search(self.info_regex, msg)
+        if info_result:
+            verbose = True
+            msg = re.sub(self.info_regex, '', msg).strip()
+
         result = re.search(self.regex, msg)
+
         if not result:
             return ("You've passed me an incorrect format %s. "
                     "The correct format is !frames character_name "
@@ -270,4 +284,4 @@ class Frames():
                                                               move_name)
         else:
             char, move, data = matched_value
-            return self.format_output(char, move, vtrigger, data)
+            return self.format_output(char, move, vtrigger, data, verbose)

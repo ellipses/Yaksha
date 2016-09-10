@@ -17,13 +17,10 @@ class MyClient(object):
                                    '../conf/bots.yaml')
         self.config = yaml.load(open(config_path).read())
 
-        self.commands = self.config['common_actions']
-        irc_commands = self.config['irc_actions']
-        admin_commands = self.config['admin_actions']
-        if irc_commands:
-            self.commands.update(irc_commands)
-        if admin_commands:
-            self.commands.update(admin_commands)
+        self.commands = self.config.get('common_actions', {})
+        self.commands.update(self.config.get('irc_actions', {}))
+        self.commands.update(self.config.get('admin_actions', {}))
+
         self.interface = interface.Interface(self.config, self.commands)
 
     @irc3.event(irc3.rfc.CONNECTED)
