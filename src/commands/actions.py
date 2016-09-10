@@ -66,9 +66,9 @@ class Frinkiac():
 
     def __init__(self, config={}):
         # gif/episode/start_timestamp/end_timestamp.gif?b64lines=caption_in_base64
-        self.gif_url = 'https://frinkiac.com/gif/%s/%s/%s.gif'
-        self.caption_url = 'https://frinkiac.com/gif/%s/%s/%s.gif?b64lines=%s'
-        self.api_url = 'https://frinkiac.com/api/search?q=%s'
+        self.gif_url = 'https://{host_name}.com/gif/%s/%s/%s.gif'
+        self.caption_url = 'https://{host_name}.com/gif/%s/%s/%s.gif?b64lines=%s'
+        self.api_url = 'https://{host_name}.com/api/search?q=%s'
         self.interval = 500
         self.max_count = 31
         self.max_timespan = 6800
@@ -173,10 +173,9 @@ class Frinkiac():
             formated_msg += ' %s' % word
             if char_buff >= 20:
                 char_buff = 0
-                formated_msg += '/n'
+                formated_msg += u"\u000A"
 
         return formated_msg
-
 
     async def handle_caption(self, caption):
         '''
@@ -229,7 +228,7 @@ class Frinkiac():
 
         return (episode, timestamps, caption)
 
-    @register('!simpsons')
+    
     async def get_gif(self, caption, user, *args):
         '''
         Method thats called when trying to get a Frinkiac url.
@@ -243,7 +242,6 @@ class Frinkiac():
         return self.gif_url % (episode,
                                timestamps[0], timestamps[-1])
 
-    @register('!scaption')
     async def get_captioned_gif(self, caption, user):
         '''
         Method thats called when trying to get a gif with
@@ -255,13 +253,47 @@ class Frinkiac():
             return 'Try fixing your quote.'
 
         episode, timestamps, caption = resp
-        # caption = self.format_message(caption)
+        caption = self.format_message(caption)
         try:
             encoded = str(base64.b64encode(str.encode(caption)), 'utf-8')
         except TypeError:
             encoded = str(base64.b64encode(str.encode(caption)))
         return self.caption_url % (episode, timestamps[0],
                                    timestamps[-1], encoded)
+
+
+class Simpsons(Frinkiac):
+
+    def __init__(self, config={}):
+        Frinkiac.__init__(self, config=config)
+        self.gif_self = self.gif_url.format(host_name='frinkiac')
+        self.caption_url = self.caption_url.format(host_name='frinkiac')
+        self.api_url = self.api_url.format(host_name='frinkiac')
+
+    @register('!simpsons')
+    async def get_simpsons_gif(*args, **kwargs):
+        await Frinkiac.get_gif(*args, **kwargs)
+
+    @register('!scaption')
+    async def get_captioned_simpsons_gif(*args, **kwargs):
+        await Frinkiac.get_captioned_gif(*args, **kwargs)
+
+
+class Morbotron(Frinkiac):
+
+    def __init__(self, config={}):
+        Frinkiac.__init__(self, config=config)
+        self.gif_self = self.gif_url.format(host_name='morbotron')
+        self.caption_url = self.caption_url.format(host_name='morbotron')
+        self.api_url = self.api_url.format(host_name='morbotron')
+
+    @register('!futurama')
+    async def get_futurame_gif(*args, **kwargs):
+        await Frinkiac.get_gif(*args, **kwargs)
+
+    @register('!fcaption')
+    async def get_captioned_futurama_gif(*args, **kwargs):
+        await Frinkiac.get_captioned_gif(*args, **kwargs)
 
 
 class Arbitary():
