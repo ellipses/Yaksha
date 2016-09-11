@@ -4,9 +4,10 @@ Module that functions as an interface between the commands and the irc/discord
 libaries. Provides a common inteface that allows the commands to function the
 same regardless of which version of the bot is instantiated.
 
-There are two main components to the interface class. remap_functions which
-creates a dictionary of commands and the functions and call_command which
-handles each valid command received by the bot. 
+There are three main components to the interface class. remap_functions which
+creates a dictionary of commands and the functions, call_command which
+handles each valid command received by the bot and user_has_permission
+which checks if the user has permission to call the specific command.
 '''
 from commands import ifgc, voting, actions
 from commands import utilities
