@@ -33,8 +33,8 @@ class Interface():
         try:
             prefix = '%s.yaksha' % config['graphite']['key']
             self.metrics = GraphiteUDPClient(host=config['graphite']['host'],
-                                            port=config['graphite']['port'],
-                                            prefix=prefix)
+                                             port=config['graphite']['port'],
+                                             prefix=prefix)
         except KeyError:
             self.metrics = None
 
@@ -90,8 +90,7 @@ class Interface():
         the message.
         '''
         func, class_name = self._func_mapping[command]
-        if self.metrics:
-            self.metrics.send('%s.%s' % (channel, command.replace('', '_')), 1)
+        self.send_metrics(command, channel)
         # First check if the user is allowed to call this
         # function.
         if self.user_has_permission(user, command):
@@ -141,6 +140,20 @@ class Interface():
         # User passed all the tests so they're allowed to
         # call the function.
         return True
+
+    def send_metrics(self, command, channel):
+        '''
+        Sends metrics for each command thats invoked.
+        '''
+        if not self.metrics:
+            return
+        else:
+            try:
+                channel = channel.server
+            except AttributeError:
+                pass
+            self.metrics.send('%s.%s' % (channel,
+                                         command.replace(' ', '_')), 1)
 
     def get_blacklisted_users(self):
         '''
