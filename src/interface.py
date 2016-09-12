@@ -29,6 +29,14 @@ class Interface():
         self.admin_actions = self.config.get('admin_actions', {}).keys()
         self.admins = self.config.get('admins', [])
 
+        try:
+            prefix = '%s.yaksha' % config['graphite']['key']
+            self.metrics = graphitedup.init(host=config['graphite']['host'],
+                                            port=config['graphite']['port'],
+                                            prefix=prefix)
+        except KeyError:
+            self.metrics = None
+
     def remap_functions(self):
         '''
         Utilities.get_callbacks() returns a dictionary mapping of
@@ -73,7 +81,7 @@ class Interface():
         for name, instance in self._class_mapping.items():
             self._class_mapping[name] = instance(self.config)
 
-    async def call_command(self, command, msg, user, *args, **kwargs):
+    async def call_command(self, command, msg, user, channel, *args, **kwargs):
         '''
         Determines which function to call from the func_mapping
         dict using the command arg as the key.
@@ -81,6 +89,8 @@ class Interface():
         the message.
         '''
         func, class_name = self._func_mapping[command]
+        if self.metrics:
+            self.metrics.send('%s.%s' % (channel, command.replace('', '_')), 1)
         # First check if the user is allowed to call this
         # function.
         if self.user_has_permission(user, command):
@@ -103,7 +113,7 @@ class Interface():
             # Call the actual function passing the instance of the
             # class as the first argument.
             return await func(self._class_mapping[class_name], msg, user,
-                              *args, **kwargs)
+                              channel, *args, **kwargs)
 
     def user_has_permission(self, user, command):
         '''
