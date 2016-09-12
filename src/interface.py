@@ -11,6 +11,7 @@ which checks if the user has permission to call the specific command.
 '''
 from commands import ifgc, voting, actions
 from commands import utilities
+import graphiteudp
 import re
 
 class Interface():
@@ -31,7 +32,7 @@ class Interface():
 
         try:
             prefix = '%s.yaksha' % config['graphite']['key']
-            self.metrics = graphitedup.init(host=config['graphite']['host'],
+            self.metrics = graphiteudp.init(host=config['graphite']['host'],
                                             port=config['graphite']['port'],
                                             prefix=prefix)
         except KeyError:
