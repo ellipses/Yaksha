@@ -12,11 +12,10 @@ class MyClient(object):
     def __init__(self, bot):
         self.bot = bot
         self.nick = self.bot.get_nick()
-        self.channels = ['#tomtest']
         config_path = os.path.join(os.path.dirname(__file__),
                                    '../conf/bots.yaml')
         self.config = yaml.load(open(config_path).read())
-
+        self.channels = self.config['irc']['channels']
         self.commands = self.config.get('common_actions', {})
         self.commands.update(self.config.get('irc_actions', {}))
         self.commands.update(self.config.get('admin_actions', {}))

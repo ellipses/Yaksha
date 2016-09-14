@@ -3,7 +3,9 @@ discord:
 frame_data:
   url: 'someurl'
 blacklist_file: 'blacklist_file.txt'
-twitch:
+irc:
+  channels:
+    - '#'
 admins: 
   - ''
 frinkiac:
