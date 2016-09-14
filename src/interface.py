@@ -12,6 +12,7 @@ which checks if the user has permission to call the specific command.
 from commands import ifgc, voting, actions
 from commands import utilities
 from graphiteudp import GraphiteUDPClient
+import asyncio
 import re
 
 class Interface():
@@ -35,6 +36,7 @@ class Interface():
             self.metrics = GraphiteUDPClient(host=config['graphite']['host'],
                                              port=config['graphite']['port'],
                                              prefix=prefix)
+            self.invalid_metric_chars = r'[\s?!.#]'
         except KeyError:
             self.metrics = None
 
@@ -90,7 +92,7 @@ class Interface():
         the message.
         '''
         func, class_name = self._func_mapping[command]
-        self.send_metrics(command, channel)
+        await self.send_metrics(command, channel)
         # First check if the user is allowed to call this
         # function.
         if self.user_has_permission(user, command):
@@ -141,19 +143,24 @@ class Interface():
         # call the function.
         return True
 
-    def send_metrics(self, command, channel):
+    async def send_metrics(self, command, channel):
         '''
         Sends metrics for each command thats invoked.
         '''
         if not self.metrics:
-            return
+            return None
         else:
             try:
                 channel = channel.server
             except AttributeError:
                 pass
-            self.metrics.send('%s.%s' % (channel,
-                                         command.replace(' ', '_')), 1)
+            channel = re.sub(self.invalid_metric_chars, '_', str(channel))
+            command = re.sub(self.invalid_metric_chars, '_', command)
+            metric_name = '%s.%s' % (channel, command)
+            loop = asyncio.get_event_loop()
+            future = loop.run_in_executor(None, self.metrics.send,
+                                          metric_name, 1)
+            await future
 
     def get_blacklisted_users(self):
         '''
