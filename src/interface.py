@@ -11,6 +11,8 @@ which checks if the user has permission to call the specific command.
 '''
 from commands import ifgc, voting, actions
 from commands import utilities
+from graphiteudp import GraphiteUDPClient
+import asyncio
 import re
 
 class Interface():
@@ -28,6 +30,15 @@ class Interface():
         self.blacklisted_users = self.get_blacklisted_users()
         self.admin_actions = self.config.get('admin_actions', {}).keys()
         self.admins = self.config.get('admins', [])
+
+        try:
+            prefix = '%s.yaksha' % config['graphite']['key']
+            self.metrics = GraphiteUDPClient(host=config['graphite']['host'],
+                                             port=config['graphite']['port'],
+                                             prefix=prefix)
+            self.invalid_metric_chars = r'[\s?!.#]'
+        except KeyError:
+            self.metrics = None
 
     def remap_functions(self):
         '''
@@ -73,7 +84,7 @@ class Interface():
         for name, instance in self._class_mapping.items():
             self._class_mapping[name] = instance(self.config)
 
-    async def call_command(self, command, msg, user, *args, **kwargs):
+    async def call_command(self, command, msg, user, channel, *args, **kwargs):
         '''
         Determines which function to call from the func_mapping
         dict using the command arg as the key.
@@ -81,6 +92,7 @@ class Interface():
         the message.
         '''
         func, class_name = self._func_mapping[command]
+        await self.send_metrics(command, channel)
         # First check if the user is allowed to call this
         # function.
         if self.user_has_permission(user, command):
@@ -103,7 +115,7 @@ class Interface():
             # Call the actual function passing the instance of the
             # class as the first argument.
             return await func(self._class_mapping[class_name], msg, user,
-                              *args, **kwargs)
+                              channel, *args, **kwargs)
 
     def user_has_permission(self, user, command):
         '''
@@ -130,6 +142,25 @@ class Interface():
         # User passed all the tests so they're allowed to
         # call the function.
         return True
+
+    async def send_metrics(self, command, channel):
+        '''
+        Sends metrics for each command thats invoked.
+        '''
+        if not self.metrics:
+            return None
+        else:
+            try:
+                channel = channel.server
+            except AttributeError:
+                pass
+            channel = re.sub(self.invalid_metric_chars, '_', str(channel))
+            command = re.sub(self.invalid_metric_chars, '_', command)
+            metric_name = '%s.%s' % (channel, command)
+            loop = asyncio.get_event_loop()
+            future = loop.run_in_executor(None, self.metrics.send,
+                                          metric_name, 1)
+            await future
 
     def get_blacklisted_users(self):
         '''
