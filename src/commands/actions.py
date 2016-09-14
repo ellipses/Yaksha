@@ -273,7 +273,7 @@ class Simpsons(Shows):
 
     @register('!scaption')
     async def get_captioned_simpsons_gif(self, *args, **kwargs):
-        return await super(Simpsons, self).get_captioned_gif(self, *args, **kwargs)
+        return await super(Simpsons, self).get_captioned_gif(*args, **kwargs)
 
 
 class Futurama(Shows):
