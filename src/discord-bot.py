@@ -36,8 +36,8 @@ async def on_message(message):
                                                            message.channel,
                                                            client)
             if response:
-                # Append the message with zero with white space char to
-                # avoid bot loops. 
+                # Prepend the message with zero width white space char to
+                # avoid bot loops.
                 response = '\u200B' + response
                 await client.send_message(message.channel, response)
             break
