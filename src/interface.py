@@ -36,7 +36,7 @@ class Interface():
             self.metrics = GraphiteUDPClient(host=config['graphite']['host'],
                                              port=config['graphite']['port'],
                                              prefix=prefix)
-            self.invalid_metric_chars = r'[\s?!.#]'
+            self.invalid_metric_chars = r'[\s?!-/.#]'
         except KeyError:
             self.metrics = None
 
