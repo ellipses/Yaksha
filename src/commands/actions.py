@@ -163,13 +163,12 @@ class Shows():
         from overflowing the gifs boundry. Line breaks are added
         at the end of a word to prevent it from being split.
         '''
-        # Iterate thr
         char_buff = 0
         formated_msg = ''
         for word in message.split(' '):
             char_buff += len(word)
             formated_msg += ' %s' % word
-            if char_buff >= 20:
+            if char_buff >= 18:
                 char_buff = 0
                 formated_msg += u"\u000A"
 
