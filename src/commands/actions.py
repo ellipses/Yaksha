@@ -318,10 +318,12 @@ class Arbitary():
     @rate_limit(60 * 60 * 24)
     @register('!skins')
     async def skins(self, message, author, *args):
-        '''
-        '''
         skins_list = yaml.load(open('skins.yaml').read())
         return random.choice(skins_list.split('\n'))
+    
+    @register('!charming')
+    async def charming(self, *args, **kwargs):
+        return 'https://goo.gl/46MdMF'
 
     @register('!mymention')
     async def get_my_mention(self, message, user, channel, client, *args):
