@@ -223,7 +223,7 @@ class Frames():
             output = self.stats_format % (char, move, data[0])
         else:
             # Have to parse knockdown advantage frames if it causes one.
-            if data['onHit'] == 'KD':
+            if data['onHit'] == 'KD' and 'kd' in data:
                 mg_format = self.output_format + self.knockdown_format
                 output = mg_format % (char, move, data['plainCommand'],
                                       data['startup'], data['active'],
@@ -236,7 +236,7 @@ class Frames():
                                                data['startup'], data['active'],
                                                data['recovery'], data['onHit'],
                                                data['onBlock'])
-        
+
         if verbose and 'extraInfo' in data:
             info = '```%s```' % ', '.join(data['extraInfo'])
             output = output + info
