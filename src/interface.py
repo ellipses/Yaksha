@@ -12,8 +12,10 @@ which checks if the user has permission to call the specific command.
 from commands import ifgc, voting, actions
 from commands import utilities
 from graphiteudp import GraphiteUDPClient
+import logging
 import asyncio
 import re
+
 
 class Interface():
 
@@ -47,7 +49,7 @@ class Interface():
 
         The name of the function is replaced by this function
         with a reference to the function and the class it belongs
-        to. This is later used by self.call_command when handling 
+        to. This is later used by self.call_command when handling
         messages.
         '''
         name_mapping = utilities.get_callbacks()
@@ -114,8 +116,12 @@ class Interface():
                 kwargs['blacklisted_users'] = self.blacklisted_users
             # Call the actual function passing the instance of the
             # class as the first argument.
-            return await func(self._class_mapping[class_name], msg, user,
-                              channel, *args, **kwargs)
+            try:
+                return await func(self._class_mapping[class_name], msg, user,
+                                  channel, *args, **kwargs)
+            except Exception:
+                logging.exception('Yaksha Error')
+                return "Sorry, that command didn't work. Ask Tom to fix it."
 
     def user_has_permission(self, user, command):
         '''
@@ -123,7 +129,7 @@ class Interface():
         command to determine if they're allowed to use it.
         '''
         discord_regex = r'<@([0-9]+)>'
-        # Determine if the requst is done by discord or irc bot        
+        # Determine if the requst is done by discord or irc bot
         regex_match = re.match(discord_regex, user)
         if regex_match:
             uid = regex_match.group(1)

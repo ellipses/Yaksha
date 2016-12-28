@@ -6,11 +6,11 @@ blacklist_file: 'blacklist_file.txt'
 irc:
   channels:
     - '#'
-admins: 
+admins:
   - ''
 frinkiac:
     # 31 * 200
-    max_timespan: 6200 
+    max_timespan: 6200
     max_count: 31
     interval: 300
     api_url:
@@ -30,18 +30,12 @@ common_actions:
     works with stats of the char like fdash, bdash, throw range etc.
     Use optional parameter -v for more info on the move.
     Usage: ```!frames Ryu cr.mk``` ```!frames Nash phrase``` ```!frames-v Ryu shoryu```
-  '!casuals': >
-    Gets the most recently posted casuals thread and the
-    people who posted in it. Usage ```!tourney```
-  '!tourney': >
-    Gets list the upcomming 5 most recent tournies.
-    Usage ```!tourney```
   '!scaption': >
     Same as !simpsons but also displays the caption in the
     obtained gif. Usage ```!scaption nothing at all```
   '!simpsons': >
-    Get a simpsons gif that matches the specified caption. 
-    Usage```!simpsons nothing at all```. 
+    Get a simpsons gif that matches the specified caption.
+    Usage```!simpsons nothing at all```.
     Can also use ```!simpsons-ex[optional time in seconds]```
     where it will extend the gif by the specified seconds.
     Gets the longest gif possible if no time is specified.
@@ -49,8 +43,8 @@ common_actions:
     Same as !futurama but also displays the caption in the
     obtained gif. Usage ```!fcaption Oh you're serious let me laugh even harder.```
   '!futurama': >
-    Get a futurama gif that matches the specified caption. 
-    Usage```!futurama Oh you're serious let me laugh even harder.```. 
+    Get a futurama gif that matches the specified caption.
+    Usage```!futurama Oh you're serious let me laugh even harder.```.
     Can also use ```!futurama-ex[optional time in seconds]```
     where it will extend the gif by the specified seconds. Gets the
     longest gif possible if no time is specified.
@@ -71,7 +65,7 @@ common_actions:
     using !whens. Usage ```!add_channel teamspooky```
   '!add_cmd': >
     Create a command to return a specific string.
-    Usage ```!add_cmd [command_name] 
+    Usage ```!add_cmd [command_name]
     some_long_or_short_string_can_be_link```
   'Yaksha: get': >
     Get the string corresponding to the saved command.
