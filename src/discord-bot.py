@@ -7,6 +7,7 @@ import re
 import yaml
 import os
 
+logging.basicConfig(level=logging.INFO)
 client = discord.Client()
 
 
@@ -30,24 +31,42 @@ async def on_message(message):
         msg = message.content
         user = message.author.mention
         if msg.lower().startswith(command.lower()):
+
             msg = msg[len(command):].strip()
             command = command.lower()
-            response = await client.interface.call_command(command,
-                                                           msg, user,
-                                                           message.channel,
-                                                           client)
+            response = await client.interface.call_command(
+                command, msg, user, message.channel, client
+            )
             if response:
-                em = None
-                if isinstance(response, tuple):
-                    msg, em = response
-                else:
-                    msg = response
-                # Prepend the message with zero width white space char to
-                # avoid bot loops.
-                if msg:
-                    msg = '\u200B' + msg
-                await client.send_message(message.channel, msg, embed=em)
+                await send_message(response)
             break
+
+
+async def send_message(response):
+    # Response can be a single message or a
+    # tuple of message and/or embed.
+    em = None
+    if isinstance(response, tuple):
+        msg, em = response
+    else:
+        msg = response
+    # Prepend the message with zero width white space char to
+    # avoid bot loops.
+    if msg:
+        msg = '\u200B' + msg
+
+    for _ in range(client.max_retries):
+        try:
+            await client.send_message(message.channel, msg, embed=em)
+            break
+        except discord.HTTPException:
+            asyncio.sleep(0.1)
+    else:
+        logging.error(
+            'Failed to send message %s and embed %s to %s after %s retries' % (
+                msg, em, message.channel, client.max_retries
+            )
+        )
 
 
 def main():
@@ -57,7 +76,7 @@ def main():
     client.commands = config.get('common_actions', {})
     client.commands.update(config.get('discord_actions', {}))
     client.commands.update(config.get('admin_actions', {}))
-
+    client.max_retries = config.get('max_retries', 3)
     client.interface = interface.Interface(config, client.commands)
 
     token = config['discord']['token']
