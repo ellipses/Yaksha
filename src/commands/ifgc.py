@@ -107,10 +107,17 @@ class Frames():
         self.regex = r'(^\S*)\s*(vtrigger|vt)?\s+(.+)'
         self.char_ratio_thresh = 65
         self.move_ratio_thresh = 65
-        self.short_mapping = {'cr': 'crouch ',
-                              'st': 'stand ',
-                              'jp': 'jump '}
-        self.short_regex = r'(^cr(\s|\.))|(^st(\s|\.))|(^jp(\s|\.))'
+        self.short_mapping = {
+            'cr': 'crouch ',
+            'st': 'stand ',
+            'jp': 'jump ',
+            'c': 'crouch ',
+            's': 'stand ',
+            'j': 'jump '
+        }
+        # Regex to capture input that starts in the form "cr.", "cr ", "c."
+        #  and "c " for cr, st and jp.
+        self.short_regex = r'(^cr|^c(\s|\.))|(^st|^s(\s|\.))|(^jp|^j(\s|\.))'
         self.output_format = ('%s - (%s - %s) - [Startup]: %s [Active]: %s [Recovery]: %s '
                               '[On Hit]: %s [On Block]: %s')
         self.stats_format = '%s - [%s] - %s'
@@ -186,6 +193,8 @@ class Frames():
         result = re.search(self.short_regex, move)
         if result:
             matched = result.group(0)
+            # String slicing to the second last character because matched
+            # string will have a '.' or ' ' at the end.
             move = re.sub(matched, self.short_mapping[matched[:-1]], move)
 
         # Use the reverse mapping to determine which move they
