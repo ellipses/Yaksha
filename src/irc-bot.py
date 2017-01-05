@@ -66,5 +66,7 @@ class MyClient(object):
                                                                      self)
 
                         if response:
+                            if isinstance(response, tuple):
+                                response, _ = response
                             await self.send_message(channel, response)
                         break

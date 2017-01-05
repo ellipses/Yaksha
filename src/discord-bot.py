@@ -9,6 +9,7 @@ import os
 
 client = discord.Client()
 
+
 @client.event
 async def on_ready():
     print('Logged in as')
@@ -36,10 +37,16 @@ async def on_message(message):
                                                            message.channel,
                                                            client)
             if response:
+                em = None
+                if isinstance(response, tuple):
+                    msg, em = response
+                else:
+                    msg = response
                 # Prepend the message with zero width white space char to
                 # avoid bot loops.
-                response = '\u200B' + response
-                await client.send_message(message.channel, response)
+                if msg:
+                    msg = '\u200B' + msg
+                await client.send_message(message.channel, msg, embed=em)
             break
 
 
@@ -55,6 +62,7 @@ def main():
 
     token = config['discord']['token']
     client.run(token)
+
 
 if __name__ == '__main__':
     main()
