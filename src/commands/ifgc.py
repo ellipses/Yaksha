@@ -103,7 +103,7 @@ class Frames():
 
     def __init__(self, config={}):
         self.url = config['frame_data']['url']
-        self.info_regex = r'^-(vp|v|pv|p)'
+        self.info_regex = r'^-v'
         self.regex = r'(^\S*)\s*(vtrigger|vt)?\s+(.+)'
         self.char_ratio_thresh = 65
         self.move_ratio_thresh = 65
@@ -248,7 +248,7 @@ class Frames():
 
         return output
 
-    def format_embeded_message(self, char, move, vt, data, verbose=True):
+    def format_embeded_message(self, char, move, vt, data):
         em = discord.Embed(
             title='%s' % char,
             description='%s - %s' % (move, data['plainCommand']),
@@ -269,7 +269,7 @@ class Frames():
         for field in fields:
             em.add_field(name=field_mapping[field], value=data[field])
 
-        if verbose and 'extraInfo' in data:
+        if 'extraInfo' in data:
             em.set_footer(text=', '.join(data['extraInfo']))
         return em
 
@@ -282,15 +282,10 @@ class Frames():
         '''
         # Check if they want verbose output.
         verbose = False
-        pretty = False
         info_result = re.search(self.info_regex, msg)
         if info_result:
-            if 'v' in info_result.string:
-                verbose = True
-            if 'p' in info_result.string:
-                pretty = True
+            verbose = True
             msg = re.sub(self.info_regex, '', msg).strip()
-
         result = re.search(self.regex, msg)
 
         if not result:
@@ -318,10 +313,9 @@ class Frames():
                                                               move_name)
         else:
             char, move, data = matched_value
-            output = self.format_output(char, move, vtrigger, data, verbose)
-            if pretty:
+            if verbose and 'char_stat' not in data:
                 return None, self.format_embeded_message(
                     char, move, vtrigger, data
                 )
             else:
-                return output
+                return self.format_output(char, move, vtrigger, data)
