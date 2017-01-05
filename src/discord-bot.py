@@ -60,7 +60,7 @@ async def send_message(response):
             await client.send_message(message.channel, msg, embed=em)
             break
         except discord.HTTPException:
-            asyncio.sleep(0.1)
+            await asyncio.sleep(0.1)
     else:
         logging.error(
             'Failed to send message %s and embed %s to %s after %s retries' % (
