@@ -3,6 +3,7 @@ from fuzzywuzzy import process
 from commands.utilities import memoize, get_request, register
 from bs4 import BeautifulSoup
 import requests
+import discord
 import json
 import re
 
@@ -102,7 +103,7 @@ class Frames():
 
     def __init__(self, config={}):
         self.url = config['frame_data']['url']
-        self.info_regex = r'^-v'
+        self.info_regex = r'^-(vp|v|pv|p)'
         self.regex = r'(^\S*)\s*(vtrigger|vt)?\s+(.+)'
         self.char_ratio_thresh = 65
         self.move_ratio_thresh = 65
@@ -225,23 +226,52 @@ class Frames():
             # Have to parse knockdown advantage frames if it causes one.
             if data['onHit'] == 'KD' and 'kd' in data:
                 mg_format = self.output_format + self.knockdown_format
-                output = mg_format % (char, move, data['plainCommand'],
-                                      data['startup'], data['active'],
-                                      data['recovery'], data['onHit'],
-                                      data['onBlock'], data['kd'],
-                                      data['kdr'], data['kdrb'])
+                output = mg_format % (
+                    char, move, data['plainCommand'],
+                    data['startup'], data['active'],
+                    data['recovery'], data['onHit'],
+                    data['onBlock'], data['kd'],
+                    data['kdr'], data['kdrb']
+                )
 
             else:
-                output = self.output_format % (char, move, data['plainCommand'],
-                                               data['startup'], data['active'],
-                                               data['recovery'], data['onHit'],
-                                               data['onBlock'])
+                output = self.output_format % (
+                    char, move, data['plainCommand'],
+                    data['startup'], data['active'],
+                    data['recovery'], data['onHit'],
+                    data['onBlock']
+                )
 
         if verbose and 'extraInfo' in data:
             info = '```%s```' % ', '.join(data['extraInfo'])
             output = output + info
 
         return output
+
+    def format_embeded_message(self, char, move, vt, data, verbose=True):
+        em = discord.Embed(
+            title='%s' % char,
+            description='%s - %s' % (move, data['plainCommand']),
+            colour=0x3998C6
+        )
+
+        fields = ['startup', 'active', 'recovery', 'onHit', 'onBlock']
+        if data['onHit'] == 'KD' and 'kd' in data:
+            fields += ['kd', 'kdr', 'kdrb']
+
+        field_mapping = {
+            'startup': 'Startup', 'active': 'Active',
+            'recovery': 'Recovery', 'onHit': 'On Hit',
+            'onBlock': 'On Block', 'kd': 'Knockdown Adv',
+            'kdr': 'Quick Rise Adv', 'kdrb': 'Back Roll Adv'
+        }
+
+        for field in fields:
+            em.add_field(name=field_mapping[field], value=data[field])
+
+        if verbose:
+            em.set_footer(text=', '.join(data['extraInfo']))
+        return em
 
     @register('!frames')
     async def get_frames(self, msg, user, *args, **kwargs):
@@ -252,9 +282,13 @@ class Frames():
         '''
         # Check if they want verbose output.
         verbose = False
+        pretty = False
         info_result = re.search(self.info_regex, msg)
         if info_result:
-            verbose = True
+            if 'v' in info_result.string:
+                verbose = True
+            if 'p' in info_result.string:
+                pretty = True
             msg = re.sub(self.info_regex, '', msg).strip()
 
         result = re.search(self.regex, msg)
@@ -284,4 +318,10 @@ class Frames():
                                                               move_name)
         else:
             char, move, data = matched_value
-            return self.format_output(char, move, vtrigger, data, verbose)
+            output = self.format_output(char, move, vtrigger, data, verbose)
+            if pretty:
+                return None, self.format_embeded_message(
+                    char, move, vtrigger, data
+                )
+            else:
+                return output
