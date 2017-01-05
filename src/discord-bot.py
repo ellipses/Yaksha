@@ -38,11 +38,11 @@ async def on_message(message):
                 command, msg, user, message.channel, client
             )
             if response:
-                await send_message(response)
+                await send_message(response, message)
             break
 
 
-async def send_message(response):
+async def send_message(response, message):
     # Response can be a single message or a
     # tuple of message and/or embed.
     em = None

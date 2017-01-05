@@ -269,7 +269,7 @@ class Frames():
         for field in fields:
             em.add_field(name=field_mapping[field], value=data[field])
 
-        if verbose:
+        if verbose and 'extraInfo' in data:
             em.set_footer(text=', '.join(data['extraInfo']))
         return em
 
