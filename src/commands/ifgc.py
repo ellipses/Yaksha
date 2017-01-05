@@ -313,9 +313,12 @@ class Frames():
                                                               move_name)
         else:
             char, move, data = matched_value
+            msg_output = self.format_output(
+                char, move, vtrigger, data, verbose
+            )
             if verbose and 'char_stat' not in data:
-                return None, self.format_embeded_message(
+                return msg_output, self.format_embeded_message(
                     char, move, vtrigger, data
                 )
             else:
-                return self.format_output(char, move, vtrigger, data)
+                return msg_output

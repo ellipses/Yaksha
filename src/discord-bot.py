@@ -57,14 +57,28 @@ async def send_message(response, message):
 
     for _ in range(client.max_retries):
         try:
-            await client.send_message(message.channel, msg, embed=em)
+            # Try sending only the embded message if it exists and fall
+            # back the the text message.
+            if em:
+                await client.send_message(message.channel, None, embed=em)
+            else:
+                await client.send_message(message.channel, msg)
             break
-        except discord.HTTPException:
+        except discord.HTTPException as e:
+            # Empty message error code which happens if you don't
+            # have permission to send embeded message.
+            if e.code == 50006:
+                try:
+                    await client.send_message(message.channel, msg)
+                    break
+                except discord.HTTPException:
+                    pass
+            logging.exception('failed to send message')
             await asyncio.sleep(0.1)
     else:
         logging.error(
-            'Failed to send message %s and embed %s to %s after %s retries' % (
-                msg, em, message.channel, client.max_retries
+            'Failed sending %s and %s to %s in %s after %s retries' % (
+                msg, em, message.channel, message.server, client.max_retries
             )
         )
 
