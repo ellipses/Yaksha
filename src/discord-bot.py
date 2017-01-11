@@ -45,7 +45,7 @@ async def on_message(message):
 
 async def change_status(config):
     """
-    Update the "Playing x" status to advertise, bot
+    Update the "Playing x" status to display bot
     commands.
     """
     await client.wait_until_ready()

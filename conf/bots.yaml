@@ -27,7 +27,7 @@ common_actions:
     Returns the most relevant gif for the caption using Giffy.
     Usage ```!gif obama mic drop```
   '!frames': >
-    Get SFV frame data for the specified char and move. also
+    Get SFV frame data for the specified char and move. Also
     works with stats of the char like fdash, bdash, throw range etc.
     Use optional parameter -v for more info on the move.
     Usage: ```!frames Ryu cr.mk``` ```!frames Nash phrase``` ```!frames-v Ryu shoryu```
