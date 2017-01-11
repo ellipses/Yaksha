@@ -113,7 +113,7 @@ def main():
     config_path = os.path.join(os.path.dirname(__file__),
                                '../conf/bots.yaml')
     config = yaml.load(open(config_path).read())
-    client.commands = config.get('common_actions', {})
+    client.commands = config.get('common_actions', {}).copy()
     client.commands.update(config.get('discord_actions', {}))
     client.commands.update(config.get('admin_actions', {}))
     client.max_retries = config.get('max_retries', 3)
