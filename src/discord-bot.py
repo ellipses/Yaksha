@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import interface
+import itertools
 import logging
 import discord
 import asyncio
@@ -40,6 +41,31 @@ async def on_message(message):
             if response:
                 await send_message(response, message)
             break
+
+
+async def change_status(config):
+    """
+    Update the "Playing x" status to advertise, bot
+    commands.
+    """
+    await client.wait_until_ready()
+    commands = itertools.chain(
+        config['common_actions'].keys(),
+        config.get('discord_actions', {}).keys()
+    )
+    for cmd in itertools.cycle(commands):
+        display_cmd = '?help | %s' % cmd
+        game = discord.Game(name=display_cmd)
+        try:
+            await client.change_presence(game=game)
+        except discord.HTTPException:
+            # Might've gotten ratelimited so just sleep for the
+            # interval and try later.
+            logging.exception('Exception when trying to change status.')
+            pass
+        await asyncio.sleep(
+            config.get('discord', {}).get('status_interval', 3600)
+        )
 
 
 async def send_message(response, message):
@@ -94,6 +120,7 @@ def main():
     client.interface = interface.Interface(config, client.commands)
 
     token = config['discord']['token']
+    client.loop.create_task(change_status(config))
     client.run(token)
 
 

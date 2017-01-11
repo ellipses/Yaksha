@@ -241,7 +241,7 @@ class Shows():
     async def get_captioned_gif(self, caption, user, *args, **kwargs):
         '''
         Method thats called when trying to get a gif with
-        a caption. Does basic error handling and base 64 
+        a caption. Does basic error handling and base 64
         encoding and formatting of the caption.
         '''
         resp = await self.handle_caption(caption)
@@ -320,7 +320,7 @@ class Arbitary():
     async def skins(self, message, author, *args):
         skins_list = yaml.load(open('skins.yaml').read())
         return random.choice(skins_list.split('\n'))
-    
+
     @register('!charming')
     async def charming(self, *args, **kwargs):
         return 'https://goo.gl/46MdMF'
@@ -331,7 +331,7 @@ class Arbitary():
         Shows the last message in the channel that mentioned the user
         that uses this command.
 
-        If an optional parameter with a number is passed is, its returns 
+        If an optional parameter with a number is passed is, its returns
         the last nth last mention.
         '''
         regex_result = re.search(self.mention_regex, message)
@@ -490,9 +490,6 @@ class AddCommands():
         return True
 
     def load_command(self, msg):
-        '''
-        switch to read indead to readlines.stoping in memeory bad when too big
-        '''
         with open(self.file, 'r') as file:
             command_list = file.readlines()
 
@@ -501,17 +498,12 @@ class AddCommands():
 
             for cmd in saved_cmd:
                 if cmd == msg:
-                    value = saved_cmd[cmd]
-                    if len(value) > 1:
-                        return random.choice(value)
-                    else:
-                        return value[0]
+                    return saved_cmd[cmd]
+
         return False
 
-    @register('yaksha: get')
-    async def get_command(self, msg, user, *args):
-        '''
-        '''
+    @register('!get')
+    async def get_command(self, msg, user, *args, **kwargs):
         # They might've sent multiple commands but
         # we only care about the first one.
         cmd = msg.split(' ')[0]
@@ -521,17 +513,17 @@ class AddCommands():
         else:
             return "Command %s doesn't exist %s" % (cmd, user)
 
-    @register('!add_cmd')
-    async def add_command(self, msg, user):
+    @register('!add')
+    async def add_command(self, msg, user, *args, **kwargs):
         '''
         Main function that called when a user
         tries to add a new command.
         '''
         split_msg = msg.split(' ')
         command = split_msg[0]
-        actions = split_msg[1:]
+        actions = ' '.join(split_msg[1:])
         if self.save_command(command, actions):
-            return 'The command _%s_ has been added.' % command
+            return 'The tag _%s_ has been added.' % command
         else:
             return 'some error check traceback, too sleepy to write sensible error message'
 
@@ -650,7 +642,7 @@ class Help():
             # Try fuzzy matching on the msg to determine the cmd
             # the user is trying to get help on.
             cmd, ratio = process.extractOne(msg, available_commands.keys())
-            
+
             # If the ratio is too low we assume the user made
             # an error.
             if ratio < self.cmd_ratio_thresh:

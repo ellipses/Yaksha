@@ -31,6 +31,10 @@ class Interface():
 
         self.blacklisted_users = self.get_blacklisted_users()
         self.admin_actions = self.config.get('admin_actions', {}).keys()
+        self.non_admin_actions = {
+            k: v for k, v in bot_commands.items()
+            if k not in self.admin_actions
+        }
         self.admins = self.config.get('admins', [])
 
         try:
@@ -107,7 +111,7 @@ class Interface():
             # Special case if its the help command that requires you
             # to pass in the available commands.
             if command == '?help':
-                kwargs['commands_dict'] = self.registered_commands
+                kwargs['commands_dict'] = self.non_admin_actions
             # Another special case for the blacklist commands that requires
             # current list of blacklisted to be passed in so it can be updated.
             # Could instead have a seperate thread that periodically reads from

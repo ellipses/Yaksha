@@ -1,5 +1,6 @@
 discord:
-  token: 'fake_token'
+  token: 'some_token'
+  max_retries: 10
 frame_data:
   url: 'someurl'
 blacklist_file: 'blacklist_file.txt'
@@ -54,22 +55,18 @@ common_actions:
   '!remindme': >
     Get Yaksha to remind to at a specified time.
     Usage ```!remindme <time period> [optional string]```
-  '!whens': 'Get status of registered streams. Usage ```!whens```'
   '!shuffle': >
     Randomly select a word from a supplied list of words.
     Usage ```!shuffle yes no maybe```'
   '?help': 'Get help on a command. Usage ```?help command_name```'
   '!skins': 'For fergus'
-  '!add_channel': >
-    Add a stream to the list of streams thats checked when
-    using !whens. Usage ```!add_channel teamspooky```
-  '!add_cmd': >
-    Create a command to return a specific string.
-    Usage ```!add_cmd [command_name]
+  '!add': >
+    Create a tag to return a specific string.
+    Usage ```!add [tag_name]
     some_long_or_short_string_can_be_link```
-  'Yaksha: get': >
+  '!get': >
     Get the string corresponding to the saved command.
-    Usage: ```Yaksha: get command_name```
+    Usage: ```!tagget command_name```
 admin_actions:
   '!blacklist': 'Blacklists a user. Usage ```!blacklist user1 [user2 user3]```'
   '!unblacklist': 'Unblacklists a user. Usage ```!unblacklist user1 [user2 user3]```'
