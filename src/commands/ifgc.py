@@ -2,6 +2,7 @@
 from fuzzywuzzy import process
 from commands.utilities import memoize, get_request, register
 from bs4 import BeautifulSoup
+from itertools import chain
 import requests
 import discord
 import json
@@ -147,9 +148,12 @@ class Frames():
         common_name_dict = {}
         commands_dict = {}
         for char in data.keys():
-            #import pdb;pdb.set_trace()
+
             char_moves = data[char]['moves']['normal']
-            for move in char_moves:
+            vt_moves = data[char]['moves']['vtrigger']
+            vt_only_moves = set(vt_moves) - set(char_moves)
+
+            for move in chain(char_moves.keys(), vt_only_moves):
                 # Add the common name of the move to the dict.
                 try:
                     common_name = char_moves[move]['commonName']
@@ -157,7 +161,19 @@ class Frames():
                 # Some moves dont have common name so just pass.
                 except KeyError:
                     pass
-                command = char_moves[move]['plainCommand']
+
+                try:
+                    command = char_moves[move]['plainCommand']
+                except KeyError:
+                    command = vt_moves[move]['plainCommand']
+
+                # Wierd edge case where a vt only move has the
+                # same plain command. In this case don't overwrite
+                # the already existing normal command. Depends on
+                # the iteration order being normal moves -> vt moves.
+                if command in commands_dict:
+                    continue
+
                 commands_dict[command] = move
 
             common_name_dict.update(commands_dict)
@@ -165,13 +181,17 @@ class Frames():
             # Also add a set of keys/values with official name
             offical_names = dict(zip(char_moves.keys(), char_moves.keys()))
             data[char]['reverse_mapping'].update(offical_names)
+            # Update the reverse mapping with vtrigger only moves.
+            data[char]['reverse_mapping'].update(
+                dict(zip(vt_only_moves, vt_only_moves))
+            )
             # Add the stats of the char to the mapping as well. The extra value
             # 'char_stat' is added to later determine if the matched move is a
             # stat or not.
             stats_mapping = {stat: (value, 'char_stat')
                              for stat, value in data[char]['stats'].items()}
             data[char]['reverse_mapping'].update(stats_mapping)
-            #
+
             common_name_dict = {}
             commands_dict = {}
 
@@ -209,7 +229,7 @@ class Frames():
 
         # Check if the matched name was a char stat or a move.
         if 'char_stat' in move:
-            return  char_match, move_match, move
+            return char_match, move_match, move
         else:
             # Find the move they want.
             if vt:
@@ -220,7 +240,11 @@ class Frames():
                 except KeyError:
                     move_data = data[char_match]['moves']['normal'][move]
             else:
-                move_data = data[char_match]['moves']['normal'][move]
+                try:
+                    move_data = data[char_match]['moves']['normal'][move]
+                # Might be a vtrigger only move.
+                except KeyError:
+                    move_data = data[char_match]['moves']['vtrigger'][move]
 
             return char_match, move, move_data
 
