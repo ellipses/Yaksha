@@ -93,7 +93,7 @@ async def send_message(response, message):
         except discord.HTTPException as e:
             # Empty message error code which happens if you don't
             # have permission to send embeded message.
-            if e.code == 50006:
+            if e.code in [50006, 50013]:
                 try:
                     await client.send_message(message.channel, msg)
                     break
