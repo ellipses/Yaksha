@@ -67,6 +67,7 @@ common_actions:
   '!get': >
     Get the string corresponding to the saved command.
     Usage: ```!get tag_name```
+  '!charming': 'Gets my boi prince charming'
 admin_actions:
   '!blacklist': 'Blacklists a user. Usage ```!blacklist user1 [user2 user3]```'
   '!unblacklist': 'Unblacklists a user. Usage ```!unblacklist user1 [user2 user3]```'
