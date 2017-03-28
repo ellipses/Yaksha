@@ -202,6 +202,7 @@ class Frames():
 
             common_name_dict = {}
             commands_dict = {}
+            numpad_dict = {}
 
     def match_move(self, char, move, vt, data):
         '''
