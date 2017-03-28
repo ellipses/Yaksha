@@ -146,6 +146,7 @@ class Frames():
         is cached for subsequent ones.
         '''
         common_name_dict = {}
+        numpad_dict = {}
         commands_dict = {}
         for char in data.keys():
 
@@ -167,6 +168,11 @@ class Frames():
                 except KeyError:
                     command = vt_moves[move]['plainCommand']
 
+                # Add the numpad notation
+                try:
+                    numpad_dict[char_moves[move]['aCom']] = move
+                except KeyError:
+                    pass
                 # Wierd edge case where a vt only move has the
                 # same plain command. In this case don't overwrite
                 # the already existing normal command. Depends on
@@ -174,9 +180,11 @@ class Frames():
                 if command in commands_dict:
                     continue
 
+
                 commands_dict[command] = move
 
             common_name_dict.update(commands_dict)
+            common_name_dict.update(numpad_dict)
             data[char]['reverse_mapping'] = common_name_dict
             # Also add a set of keys/values with official name
             offical_names = dict(zip(char_moves.keys(), char_moves.keys()))
