@@ -113,10 +113,9 @@ async def get_request(url):
     Returns the text if the status is 200, False
     otherwise.
     '''
-    loop = asyncio.get_event_loop()
-    future = loop.run_in_executor(None, requests.get, url)
-    resp = await future
-    if resp.status_code == 200:
-        return resp.text
-    else:
-        return False
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status == 200:
+                return await resp.text()
+            else:
+                return False
