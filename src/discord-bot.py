@@ -28,6 +28,9 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    if message.server.id in client.config.get('ignored_servers', []):
+        return
+
     for command in client.commands.keys():
         msg = message.content
         user = message.author.mention
@@ -117,6 +120,7 @@ def main():
     client.commands.update(config.get('discord_actions', {}))
     client.commands.update(config.get('admin_actions', {}))
     client.max_retries = config.get('max_retries', 3)
+    client.config = config
     client.interface = interface.Interface(config, client.commands)
 
     token = config['discord']['token']
