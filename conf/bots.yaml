@@ -7,6 +7,9 @@ blacklist_file: 'blacklist_file.txt'
 irc:
   channels:
     - '#'
+stats:
+  url: https://bots.discord.pw/api/bots/{bot_id}/stats
+  token: 'some_other_token'
 admins:
   - ''
 frinkiac:
@@ -67,7 +70,8 @@ common_actions:
   '!get': >
     Get the string corresponding to the saved command.
     Usage: ```!get tag_name```
-  '!charming': 'Gets my boi prince charming'
+  '!charming': 'Gets my boi prince charming.'
+  '!onion': 'Gets my boi onion judging you.'
 admin_actions:
   '!blacklist': 'Blacklists a user. Usage ```!blacklist user1 [user2 user3]```'
   '!unblacklist': 'Unblacklists a user. Usage ```!unblacklist user1 [user2 user3]```'
