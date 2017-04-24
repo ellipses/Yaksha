@@ -11,7 +11,7 @@ import re
 
 class Boards():
 
-    def __init__(self, config={}):
+    def __init__(self, config=None):
         self.url = ('http://www.boards.ie/vbulletin/forumdisplay.php?f=1204')
 
     @memoize(60 * 60)
@@ -102,7 +102,8 @@ class Boards():
 
 class Frames():
 
-    def __init__(self, config={}):
+    def __init__(self, config=None):
+        config = config or {}
         self.url = config['frame_data']['url']
         self.info_regex = r'^-v'
         self.regex = r'(^\S*)\s*(vtrigger|vt)?\s+(.+)'
