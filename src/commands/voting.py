@@ -5,7 +5,7 @@ import re
 
 class Voting():
 
-    def __init__(self, config={}):
+    def __init__(self, config=None):
         # regex to match a number at the start of the message.
         # Being a float is optional.
         self.length_re = r'--((\d*)?(\.\d*)?)'
@@ -121,7 +121,7 @@ class Voting():
         Simple async function that sleeps for the vote length
         and calls the start and end voting functions.
         '''
-        await self.send_start_message(client, channel, vote_length, msg)        
+        await self.send_start_message(client, channel, vote_length, msg)
         # sleep for the vote length.
         await asyncio.sleep(vote_length * 60)
         # Count the votes and send the ending message
@@ -165,7 +165,7 @@ class Voting():
                 # Check if the supplied argument is a valid vote option.
                 vote_option = msg.lower().strip()
                 valid_options = self.active_votes[channel][1]
-     
+
                 if vote_option in valid_options:
                     self.active_votes[channel][1][vote_option] += 1
                     # Add the user to the list of users.

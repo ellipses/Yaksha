@@ -19,7 +19,7 @@ import os
 
 class Streams():
 
-    def __init__(self, config={}):
+    def __init__(self, config=None):
         self.file = 'channel.txt'
         self.api_prefix = 'https://api.twitch.tv/kraken/streams/?channel='
 
@@ -65,7 +65,7 @@ class Streams():
 
 class Shows():
 
-    def __init__(self, config={}):
+    def __init__(self, config=None):
         # gif/episode/start_timestamp/end_timestamp.gif?b64lines=caption_in_base64
         self.interval = 500
         self.max_count = 31
@@ -260,7 +260,8 @@ class Shows():
 
 class Simpsons(Shows):
 
-    def __init__(self, config={}):
+    def __init__(self, config=None):
+        config = config or {}
         super(Simpsons, self).__init__(config)
         self.gif_url = 'https://frinkiac.com/gif/%s/%s/%s.gif'
         self.caption_url = 'https://frinkiac.com/gif/%s/%s/%s.gif?b64lines=%s'
@@ -277,7 +278,8 @@ class Simpsons(Shows):
 
 class Futurama(Shows):
 
-    def __init__(self, config={}):
+    def __init__(self, config=None):
+        config = config or {}
         super(Futurama, self).__init__(config)
         self.gif_url = 'https://morbotron.com/gif/%s/%s/%s.gif'
         self.caption_url = 'https://morbotron.com/gif/%s/%s/%s.gif?b64lines=%s'
@@ -294,8 +296,8 @@ class Futurama(Shows):
 
 class Arbitary():
 
-    def __init__(self, config={}):
-        self.config = config
+    def __init__(self, config=None):
+        self.config = config or {}
         self.tourney_url = 'http://shoryuken.com/tournament-calendar/'
         self.history_limit = 500
         self.mention_regex = r'-(\d)'
@@ -357,7 +359,7 @@ class Arbitary():
 
 class Tourney():
 
-    def __init__(self, config={}):
+    def __init__(self, config=None):
         self.tourney_url = 'http://shoryuken.com/tournament-calendar/'
 
     def convert_times(self, times):
@@ -446,7 +448,7 @@ class Tourney():
 
 class Gifs():
 
-    def __init__(self, config={}):
+    def __init__(self, config=None):
         self.search_url = ('http://api.giphy.com/v1/gifs/search?q='
                            '%s&api_key=dc6zaTOxFJmzC')
         self.translate_url = ('http://api.giphy.com/v1/gifs/translate?s='
@@ -480,7 +482,8 @@ class Gifs():
 
 class AddCommands():
 
-    def __init__(self, config={}):
+    def __init__(self, config=None):
+        config = config or {}
         self.file = config['add_commands']['file']
 
     def save_command(self, command, actions):
@@ -530,7 +533,7 @@ class AddCommands():
 
 class Reminder():
 
-    def __init__(self, config={}):
+    def __init__(self, config=None):
         self.active_reminder = {}
         self.regex = r'\[(.*)\]'
         self.settings = {'PREFER_DATES_FROM': 'future',
@@ -630,8 +633,8 @@ class Reminder():
 
 class Help():
 
-    def __init__(self, config={}):
-        self.config = config
+    def __init__(self, config=None):
+        self.config = config or {}
         self.cmd_ratio_thresh = 80
 
     @register('?help')
@@ -656,7 +659,8 @@ class Help():
 
 class Blacklist():
 
-    def __init__(self, config={}):
+    def __init__(self, config=None):
+        config = config or {}
         self.blacklist_file = config.get('blacklist_file')
 
     @register('!blacklist')
