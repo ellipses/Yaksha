@@ -28,7 +28,6 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    return
     if message.author == client.user:
         return
 
@@ -57,7 +56,6 @@ async def change_status(config):
     commands.
     """
     await client.wait_until_ready()
-    return
     commands = itertools.chain(
         config['common_actions'].keys(),
         config.get('discord_actions', {}).keys()
@@ -74,6 +72,20 @@ async def change_status(config):
             pass
         await asyncio.sleep(
             config.get('discord', {}).get('status_interval', 3600)
+        )
+
+
+async def post_request():
+    future = client.loop.run_in_executor(
+        None, functools.partial(
+            requests.get, 'http://www.google.com'
+        )
+    )
+    resp = await future
+    if not resp:
+        logging.error(
+            'Posting stats failed with %s because %s',
+            resp.status_code, resp.content
         )
 
 
@@ -95,23 +107,12 @@ async def publish_stats(config):
         )
         return None
 
-    loop = asyncio.get_event_loop()
     while True:
         payload = {
             "server_count": len(client.servers)
         }
         try:
-            future = loop.run_in_executor(
-                None, functools.partial(
-                    requests.post, url, json=payload, headers=headers
-                )
-            )
-            resp = await future
-            if not resp:
-                logging.error(
-                    'Posting stats failed with %s because %s',
-                    resp.status, resp.content
-                )
+            await make_request()
         except Exception:
             # Pokemon exception catching because we dont want errors
             # with stats update to affect the normal operation.
