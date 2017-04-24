@@ -1,20 +1,22 @@
 #!/usr/bin/python
-from commands.utilities import rate_limit, memoize, get_request, register, get_callbacks
-from dateparser.date import DateDataParser
-from datetime import datetime, timedelta
-from fuzzywuzzy import process
-from bs4 import BeautifulSoup
-import aiofiles
-import aiohttp
-import requests
-import asyncio
-import random
-import base64
+import re
+import os
 import yaml
 import json
 import time
-import re
-import os
+import random
+import base64
+import aiohttp
+import asyncio
+import requests
+import aiofiles
+import asyncio_redis
+from fuzzywuzzy import process
+from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
+from dateparser.date import DateDataParser
+from commands.utilities import (rate_limit, memoize, get_request,
+                                register, get_callbacks)
 
 
 class Streams():
@@ -482,39 +484,41 @@ class AddCommands():
 
     def __init__(self, config={}):
         self.file = config['add_commands']['file']
+        self.redis = None
 
-    def save_command(self, command, actions):
-        with open(self.file, 'a') as file:
-            json.dump({command: actions}, file)
-            file.write(os.linesep)
+    def get_redis_key(self, channel, **kwargs):
+        return 'additional_commands_%s' % kwargs.get('server', channel)
+
+    async def save_command(self, command, actions, channel, **kwargs):
+        await self.innit_redis()
+        await self.redis.hmset(
+            self.get_redis_key(channel, **kwargs), {command: actions}
+        )
         return True
 
-    def load_command(self, msg):
-        with open(self.file, 'r') as file:
-            command_list = file.readlines()
+    async def load_command(self, command, channel, **kwargs):
+        await self.innit_redis()
+        return await self.redis.hget(
+            self.get_redis_key(channel, **kwargs), command
+        )
 
-        for command in command_list:
-            saved_cmd = json.loads(command)
-
-            for cmd in saved_cmd:
-                if cmd == msg:
-                    return saved_cmd[cmd]
-
-        return False
+    async def innit_redis(self):
+        if not self.redis:
+            self.redis = await asyncio_redis.Connection.create()
 
     @register('!get')
-    async def get_command(self, msg, user, *args, **kwargs):
+    async def get_command(self, msg, user, channel, *args, **kwargs):
         # They might've sent multiple commands but
         # we only care about the first one.
         cmd = msg.split(' ')[0]
-        resp = self.load_command(cmd)
+        resp = await self.load_command(cmd, channel, **kwargs)
         if resp:
             return resp
         else:
             return "Command %s doesn't exist %s" % (cmd, user)
 
     @register('!add')
-    async def add_command(self, msg, user, *args, **kwargs):
+    async def add_command(self, msg, user, channel, *args, **kwargs):
         '''
         Main function that called when a user
         tries to add a new command.
@@ -522,10 +526,10 @@ class AddCommands():
         split_msg = msg.split(' ')
         command = split_msg[0]
         actions = ' '.join(split_msg[1:])
-        if self.save_command(command, actions):
+        if await self.save_command(command, actions, channel, **kwargs):
             return 'The tag _%s_ has been added.' % command
         else:
-            return 'some error check traceback, too sleepy to write sensible error message'
+            return 'Failed to add tag.'
 
 
 class Reminder():

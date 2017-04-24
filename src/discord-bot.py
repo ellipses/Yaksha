@@ -39,7 +39,8 @@ async def on_message(message):
             msg = msg[len(command):].strip()
             command = command.lower()
             response = await client.interface.call_command(
-                command, msg, user, message.channel, client
+                command, msg, user, message.channel, client,
+                server=message.server.id
             )
             if response:
                 await send_message(response, message)
