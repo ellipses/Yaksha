@@ -15,6 +15,7 @@ ruamel.yaml==0.11.11
 six==1.10.0
 umalqurra==0.2
 websockets==3.1
+asyncio_redis
 irc3
 aiofiles
 # To install discord do pip install -U discord.py
