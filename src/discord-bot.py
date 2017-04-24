@@ -1,12 +1,15 @@
 #!/usr/bin/python
-import interface
-import itertools
+import re
+import os
+import yaml
 import logging
 import discord
 import asyncio
-import re
-import yaml
-import os
+import requests
+import interface
+import functools
+import itertools
+
 
 logging.basicConfig(level=logging.INFO)
 client = discord.Client()
@@ -25,6 +28,7 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    return
     if message.author == client.user:
         return
 
@@ -52,6 +56,7 @@ async def change_status(config):
     commands.
     """
     await client.wait_until_ready()
+    return
     commands = itertools.chain(
         config['common_actions'].keys(),
         config.get('discord_actions', {}).keys()
@@ -69,6 +74,49 @@ async def change_status(config):
         await asyncio.sleep(
             config.get('discord', {}).get('status_interval', 3600)
         )
+
+
+async def publish_stats(config):
+    """
+    Publish information on the number of servers we belong
+    to.
+    """
+    await client.wait_until_ready()
+    try:
+        headers = {
+            'Authorization': config['stats']['token']
+        }
+        url = config['stats']['url'].format(bot_id=client.user.id)
+    except KeyError:
+        logging.error(
+            'Token not present in config so starting without ability'
+            ' to publish stats.'
+        )
+        return None
+
+    loop = asyncio.get_event_loop()
+    while True:
+        payload = {
+            "server_count": len(client.servers)
+        }
+        try:
+            future = loop.run_in_executor(
+                None, functools.partial(
+                    requests.post, url, json=payload, headers=headers
+                )
+            )
+            resp = await future
+            if not resp:
+                logging.error(
+                    'Posting stats failed with %s because %s',
+                    resp.status, resp.content
+                )
+        except Exception:
+            # Pokemon exception catching because we dont want errors
+            # with stats update to affect the normal operation.
+            logging.exception('Failed to update stats')
+
+        await asyncio.sleep(config['stats'].get('interval', 3600))
 
 
 async def send_message(response, message):
@@ -125,6 +173,7 @@ def main():
 
     token = config['discord']['token']
     client.loop.create_task(change_status(config))
+    client.loop.create_task(publish_stats(config))
     client.run(token)
 
 

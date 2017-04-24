@@ -327,6 +327,10 @@ class Arbitary():
     async def charming(self, *args, **kwargs):
         return 'https://goo.gl/46MdMF'
 
+    @register('!onion')
+    async def onion(self, *args, **kwargs):
+        return 'http://gifimgs.com/res/0417/58fbe9bfd0d0d338045526.gif'
+
     @register('!mymention')
     async def get_my_mention(self, message, user, channel, client, *args):
         '''
