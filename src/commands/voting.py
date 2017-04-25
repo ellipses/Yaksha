@@ -130,7 +130,7 @@ class Voting():
         del self.active_votes[channel]
 
     @register('!vote')
-    async def start_vote(self, msg, user, channel, client):
+    async def start_vote(self, msg, user, channel, client, *args, **kwargs):
         '''
         Main function that handles the vote function. Makes sure
         that only vote is going at a time in a channel.

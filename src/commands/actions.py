@@ -11,6 +11,7 @@ import asyncio
 import requests
 import aiofiles
 import asyncio_redis
+from urilib.parse import quote
 from fuzzywuzzy import process
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
@@ -52,7 +53,7 @@ class Streams():
         return message
 
     @register('!whens')
-    async def display_stream_list(self, msg, user, *args):
+    async def display_stream_list(self, msg, user, *args, **kwargs):
         channels = self.get_channels()
         channel_list = (',').join(channels.split(' '))
 
@@ -197,10 +198,8 @@ class Shows():
 
         # Hit the api endpoint to get a list of screencaps
         # that are relevant to the caption.
-        response = await get_request(self.api_url % caption)
-        screen_caps = json.loads(response)
-
-        if len(screen_caps) <= 1:
+        screen_caps = await get_request(self.api_url % quote(caption), True)
+        if not screen_caps or len(screen_caps) <= 1:
             return False
 
         # Find the most common episode and longest sequence of
@@ -305,7 +304,7 @@ class Arbitary():
         self.mention_regex = r'-(\d)'
 
     @register('!shuffle')
-    async def shuffle(self, sentence, author, *args):
+    async def shuffle(self, sentence, author, *args, **kwargs):
         '''
         '''
         sentence = re.sub(r'\s\s+', ' ', sentence)
@@ -461,7 +460,7 @@ class Gifs():
                               '%s&api_key=dc6zaTOxFJmzC')
 
     @register('!gif')
-    async def get_gif(self, quote, author, *args):
+    async def get_gif(self, quote, author, *args, **kwargs):
         query = '+'.join(quote.split(' '))
         resp = await get_request(self.search_url % query)
 
@@ -475,7 +474,7 @@ class Gifs():
             return 'Got an error when searching for gifs :('
 
     @register('!tgif')
-    def get_translate_gif(self, quote, author, *args):
+    def get_translate_gif(self, quote, author, *args, **kwargs):
         query = '+'.join(quote.split(' '))
         resp = requests.get(self.translate_url % query)
 
@@ -614,7 +613,7 @@ class Reminder():
         return (True, difference, parsed_time)
 
     @register('!remindme')
-    async def set_reminder(self, msg, user, channel, client):
+    async def set_reminder(self, msg, user, channel, client, *args, **kwargs):
         '''
         Main function that called to set a reminder. Calls the
         helper functions to parse and to check if its valid.
