@@ -75,10 +75,10 @@ async def change_status(config):
         )
 
 
-async def post_request():
+async def post_request(url, data, headers):
     future = client.loop.run_in_executor(
         None, functools.partial(
-            requests.get, 'http://www.google.com'
+            requests.get, url, json=data, headers=headers
         )
     )
     resp = await future
@@ -112,7 +112,7 @@ async def publish_stats(config):
             "server_count": len(client.servers)
         }
         try:
-            await post_request()
+            await post_request(url, payload)
         except Exception:
             # Pokemon exception catching because we dont want errors
             # with stats update to affect the normal operation.
