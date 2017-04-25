@@ -11,7 +11,7 @@ import asyncio
 import requests
 import aiofiles
 import asyncio_redis
-from urilib.parse import quote
+from urllib.parse import quote
 from fuzzywuzzy import process
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
