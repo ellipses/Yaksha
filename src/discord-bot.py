@@ -112,7 +112,7 @@ async def publish_stats(config):
             "server_count": len(client.servers)
         }
         try:
-            await post_request(url, payload)
+            await post_request(url, payload, headers)
         except Exception:
             # Pokemon exception catching because we dont want errors
             # with stats update to affect the normal operation.
