@@ -299,7 +299,7 @@ class Frames():
 
         return output
 
-    def format_output(self, char, move, vt, move_data, data, searched_move, verbose=False):
+    def format_output(self, char, move, vt, move_data, data, searched_move):
         '''
         Formats the msg to a nicely spaced string for
         presentation.
@@ -327,10 +327,6 @@ class Frames():
                     move_data['recovery'], move_data['onHit'],
                     move_data['onBlock']
                 )
-
-        if verbose and 'extraInfo' in move_data:
-            info = '```%s```' % ', '.join(move_data['extraInfo'])
-            output = output + info
 
         return output
 
@@ -370,6 +366,10 @@ class Frames():
                  for key, value in custom_fields.items()]
             )
         )
+
+        if 'extraInfo' in data:
+            info = ' ```%s``` ' % ', '.join(data['extraInfo'])
+            text_output = text_output + info
 
         for field, value in custom_fields.items():
             embed_output.add_field(name=field, value=value)
@@ -417,7 +417,7 @@ class Frames():
         else:
             char, move, data = matched_value
             text_output = self.format_output(
-                char, move, vtrigger, data, frame_data, move_name, verbose
+                char, move, vtrigger, data, frame_data, move_name
             )
             if verbose and 'char_stat' not in data:
                 embed_output = self.format_embeded_message(
