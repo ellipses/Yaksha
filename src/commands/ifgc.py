@@ -360,8 +360,6 @@ class Frames():
         return em
 
     def add_custom_fields(self, data, text_output, embed_output):
-        """
-        """
         custom_fields = {
             field: data[field] for field in self.custom_fields if field in data
         }
