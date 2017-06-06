@@ -125,6 +125,21 @@ class Frames():
         self.stats_format = '%s - [%s] - %s'
         self.knockdown_format = ' [KD Adv]: %s [Quick Rise Adv]: %s [Back Rise Adv]: %s '
 
+        self.custom_fields = [
+            'lmaoH', 'lmaoB', 'vscoH', 'vscoB', 'vtcOnBlock', 'vtcOnHit',
+            'vtcOnBlockF', 'vtcOnHitF', 'vtcOnBlockB', 'vtcOnHitB',
+            'vtcOnBlockD', 'vtcOnHitD', 'ssOnBlock', 'ssOnHit', 'lkDashOH',
+            'lkDashOB', 'mkDashOH', 'mkDashOB', 'exDashOH', 'exDashOB',
+            'VSPGapHit', 'VSPGapBlock', 'VSKGapHit', 'VSKGapBlock',
+        ]
+
+        self.stats_mapping = {
+            'dash': ('bDashDist', 'bDash', 'fDashDist', 'fDash'),
+            'walk': ('fWalk', 'bWalk'),
+            'jump': ('bJumpDist', 'bJump', 'nJump', 'fJump', 'fJumpDist'),
+            'throw': ('throwHurt', 'throwRange')
+        }
+
     @memoize(60 * 60 * 24 * 7)
     async def get_data(self, **kwargs):
         '''
@@ -225,7 +240,9 @@ class Frames():
             matched = result.group(0)
             # Slice to the second last char because the matched move might
             # be 'cr. 'or 'cr ' but the  mapping only contains cr.
-            move = re.sub(self.short_regex, self.short_mapping[matched[:-1]], move)
+            move = re.sub(
+                self.short_regex, self.short_mapping[matched[:-1]], move
+            )
 
         # Use the reverse mapping to determine which move they
         # were looking for.
@@ -258,35 +275,61 @@ class Frames():
 
             return char_match, move, move_data
 
-    def format_output(self, char, move, vt, data, verbose=False):
+    def format_stats_output(self, char, move, move_data, data, searched_move):
+        match, ratio = process.extractOne(
+            searched_move, self.stats_mapping.keys()
+        )
+        if ratio > 85:
+
+            related_fields = {}
+            for field in self.stats_mapping[match]:
+                try:
+                    related_fields[field] = data[char]['stats'][field]
+                except KeyError:
+                    pass
+
+            output = ''.join(
+                [' [%s] - %s' % (key, value)
+                 for key, value in related_fields.items()]
+            )
+            output = '%s -' % char + output
+
+        else:
+            output = self.stats_format % (char, move, move_data[0])
+
+        return output
+
+    def format_output(self, char, move, vt, move_data, data, searched_move, verbose=False):
         '''
         Formats the msg to a nicely spaced string for
         presentation.
         '''
-        if 'char_stat' in data:
-            output = self.stats_format % (char, move, data[0])
+        if 'char_stat' in move_data:
+            output = self.format_stats_output(
+                char, move, move_data, data, searched_move
+            )
         else:
             # Have to parse knockdown advantage frames if it causes one.
-            if data['onHit'] == 'KD' and 'kd' in data:
+            if move_data['onHit'] == 'KD' and 'kd' in move_data:
                 mg_format = self.output_format + self.knockdown_format
                 output = mg_format % (
-                    char, move, data['plainCommand'],
-                    data['startup'], data['active'],
-                    data['recovery'], data['onHit'],
-                    data['onBlock'], data['kd'],
-                    data['kdr'], data['kdrb']
+                    char, move, move_data['plainCommand'],
+                    move_data['startup'], move_data['active'],
+                    move_data['recovery'], move_data['onHit'],
+                    move_data['onBlock'], move_data['kd'],
+                    move_data['kdr'], move_data['kdrb']
                 )
 
             else:
                 output = self.output_format % (
-                    char, move, data['plainCommand'],
-                    data['startup'], data['active'],
-                    data['recovery'], data['onHit'],
-                    data['onBlock']
+                    char, move, move_data['plainCommand'],
+                    move_data['startup'], move_data['active'],
+                    move_data['recovery'], move_data['onHit'],
+                    move_data['onBlock']
                 )
 
-        if verbose and 'extraInfo' in data:
-            info = '```%s```' % ', '.join(data['extraInfo'])
+        if verbose and 'extraInfo' in move_data:
+            info = '```%s```' % ', '.join(move_data['extraInfo'])
             output = output + info
 
         return output
@@ -315,6 +358,25 @@ class Frames():
         if 'extraInfo' in data:
             em.set_footer(text=', '.join(data['extraInfo']))
         return em
+
+    def add_custom_fields(self, data, text_output, embed_output):
+        """
+        """
+        custom_fields = {
+            field: data[field] for field in self.custom_fields if field in data
+        }
+
+        text_output = text_output + (
+            ''.join(
+                [' [%s]: %s' % (key, value)
+                 for key, value in custom_fields.items()]
+            )
+        )
+
+        for field, value in custom_fields.items():
+            embed_output.add_field(name=field, value=value)
+
+        return text_output, embed_output
 
     @register('!frames')
     async def get_frames(self, msg, user, *args, **kwargs):
@@ -356,12 +418,13 @@ class Frames():
                                                               move_name)
         else:
             char, move, data = matched_value
-            msg_output = self.format_output(
-                char, move, vtrigger, data, verbose
+            text_output = self.format_output(
+                char, move, vtrigger, data, frame_data, move_name, verbose
             )
             if verbose and 'char_stat' not in data:
-                return msg_output, self.format_embeded_message(
+                embed_output = self.format_embeded_message(
                     char, move, vtrigger, data
                 )
+                return self.add_custom_fields(data, text_output, embed_output)
             else:
-                return msg_output
+                return text_output
