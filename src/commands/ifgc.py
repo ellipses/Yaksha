@@ -3,7 +3,6 @@ import re
 import json
 import discord
 import requests
-
 from itertools import chain
 from bs4 import BeautifulSoup
 from fuzzywuzzy import process
