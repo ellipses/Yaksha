@@ -358,7 +358,7 @@ class Frames():
         return em
 
     def add_custom_fields(self, data, text_output, embed_output):
-        # Use a ordered dict here because we want to display stats in
+        # Use an ordered dict here because we want to display stats in
         # the order we defined them.
         custom_fields = OrderedDict()
         for field in self.custom_fields:
