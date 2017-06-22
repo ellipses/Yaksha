@@ -1,12 +1,15 @@
 #!/usr/bin/python
-from fuzzywuzzy import process
-from commands.utilities import memoize, get_request, register
-from bs4 import BeautifulSoup
-from itertools import chain
-import requests
-import discord
-import json
 import re
+import json
+import discord
+import requests
+
+from itertools import chain
+from bs4 import BeautifulSoup
+from fuzzywuzzy import process
+from collections import OrderedDict
+from commands.utilities import memoize, get_request, register
+
 
 
 class Boards():
@@ -356,9 +359,12 @@ class Frames():
         return em
 
     def add_custom_fields(self, data, text_output, embed_output):
-        custom_fields = {
-            field: data[field] for field in self.custom_fields if field in data
-        }
+        # Use a ordered dict here because we want to display stats in
+        # the order we defined them.
+        custom_fields = OrderedDict()
+        for field in self.custom_fields:
+            if field in data:
+                custom_fields[field] = data[field]
 
         text_output = text_output + (
             ''.join(
