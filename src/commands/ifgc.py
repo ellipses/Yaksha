@@ -129,7 +129,7 @@ class Frames():
 
         self.custom_fields = [
             'lmaoH', 'lmaoB', 'vscoH', 'vscoB', 'vtcOnHit', 'vtcOnBlock',
-            'vtcOnHitF', 'vtcOnBlockF', 'vtcOnHitB', 'vtcOnBlockB',
+            'vtcOnHitB', 'vtcOnHitF', 'vtcOnBlockB', 'vtcOnBlockF',
             'vtcOnHitD', 'vtcOnBlockD', 'ssOnHit', 'ssOnBlock', 'lkDashOH',
             'lkDashOB', 'mkDashOH', 'mkDashOB', 'exDashOH', 'exDashOB',
             'VSPGapHit', 'VSPGapBlock', 'VSKGapHit', 'VSKGapBlock',
