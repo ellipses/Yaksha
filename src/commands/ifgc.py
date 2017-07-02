@@ -128,17 +128,17 @@ class Frames():
         self.knockdown_format = ' [KD Adv]: %s [Quick Rise Adv]: %s [Back Rise Adv]: %s '
 
         self.custom_fields = [
-            'lmaoH', 'lmaoB', 'vscoH', 'vscoB', 'vtcOnBlock', 'vtcOnHit',
-            'vtcOnBlockF', 'vtcOnHitF', 'vtcOnBlockB', 'vtcOnHitB',
-            'vtcOnBlockD', 'vtcOnHitD', 'ssOnBlock', 'ssOnHit', 'lkDashOH',
+            'lmaoH', 'lmaoB', 'vscoH', 'vscoB', 'vtcOnHit', 'vtcOnBlock',
+            'vtcOnHitF', 'vtcOnBlockF', 'vtcOnHitB', 'vtcOnBlockB',
+            'vtcOnHitD', 'vtcOnBlockD', 'ssOnHit', 'ssOnBlock', 'lkDashOH',
             'lkDashOB', 'mkDashOH', 'mkDashOB', 'exDashOH', 'exDashOB',
             'VSPGapHit', 'VSPGapBlock', 'VSKGapHit', 'VSKGapBlock',
         ]
 
         self.stats_mapping = {
-            'dash': ('bDashDist', 'bDash', 'fDashDist', 'fDash'),
-            'walk': ('fWalk', 'bWalk'),
-            'jump': ('bJumpDist', 'bJump', 'nJump', 'fJump', 'fJumpDist'),
+            'dash': ('bDash', 'fDash', 'bDashDist', 'fDashDist'),
+            'walk': ('bWalk', 'fWalk'),
+            'jump': ('bJump', 'fJump', 'nJump', 'bJumpDist', 'fJumpDist'),
             'throw': ('throwHurt', 'throwRange')
         }
 
