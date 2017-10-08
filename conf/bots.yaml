@@ -62,7 +62,6 @@ common_actions:
     Randomly select a word from a supplied list of words.
     Usage ```!shuffle yes no maybe```'
   '?help': 'Get help on a command. Usage ```?help command_name```'
-  '!skins': 'For fergus'
   '!add': >
     Create a tag to return a specific string.
     Usage ```!add [tag_name]
@@ -71,7 +70,6 @@ common_actions:
     Get the string corresponding to the saved command.
     Usage: ```!get tag_name```
   '!charming': 'Gets my boi prince charming.'
-  '!onion': 'Gets my boi onion judging you.'
 admin_actions:
   '!blacklist': 'Blacklists a user. Usage ```!blacklist user1 [user2 user3]```'
   '!unblacklist': 'Unblacklists a user. Usage ```!unblacklist user1 [user2 user3]```'

@@ -78,7 +78,7 @@ async def change_status(config):
 async def post_request(url, data, headers):
     future = client.loop.run_in_executor(
         None, functools.partial(
-            requests.get, url, json=data, headers=headers
+            requests.post, url, json=data, headers=headers
         )
     )
     resp = await future
