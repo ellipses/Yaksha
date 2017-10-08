@@ -300,6 +300,16 @@ class Frames():
             output = self.stats_format % (char, move, move_data[0])
 
         return output
+    
+    def escape_chars(self, value):
+        '''
+        Escape characters like * to prevent discord from using it
+        for formatting.
+        '''
+        try:
+            return value.replace('*', '\*')
+        except AttributeError:
+            return value
 
     def format_output(self, char, move, vt, move_data, data, searched_move):
         '''
@@ -311,24 +321,19 @@ class Frames():
                 char, move, move_data, data, searched_move
             )
         else:
+            cmds = [
+                'plainCommand', 'startup', 'active', 'recovery', 'onHit',
+                'onBlock'
+            ]
+            msg_format = self.output_format
             # Have to parse knockdown advantage frames if it causes one.
             if move_data['onHit'] == 'KD' and 'kd' in move_data:
-                mg_format = self.output_format + self.knockdown_format
-                output = mg_format % (
-                    char, move, move_data['plainCommand'],
-                    move_data['startup'], move_data['active'],
-                    move_data['recovery'], move_data['onHit'],
-                    move_data['onBlock'], move_data['kd'],
-                    move_data['kdr'], move_data['kdrb']
-                )
-
-            else:
-                output = self.output_format % (
-                    char, move, move_data['plainCommand'],
-                    move_data['startup'], move_data['active'],
-                    move_data['recovery'], move_data['onHit'],
-                    move_data['onBlock']
-                )
+                msg_format = self.output_format + self.knockdown_format
+                cmds.extend(['kd', 'kdr', 'kdrb'])
+				  
+            moves = [char, move]
+            moves.extend(self.escape_chars(move_data[cmd]) for cmd in cmds)
+            output = msg_format % tuple(moves)
 
         return output
 
@@ -351,7 +356,9 @@ class Frames():
         }
 
         for field in fields:
-            em.add_field(name=field_mapping[field], value=data[field])
+            em.add_field(
+                name=field_mapping[field], value=self.escape_chars(data[field])
+            )
 
         if 'extraInfo' in data:
             em.set_footer(text=', '.join(data['extraInfo']))
@@ -363,7 +370,7 @@ class Frames():
         custom_fields = OrderedDict()
         for field in self.custom_fields:
             if field in data:
-                custom_fields[field] = data[field]
+                custom_fields[field] = self.escape_chars(data[field])
 
         text_output = text_output + (
             ''.join(
