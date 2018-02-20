@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from apiclient.discovery import build
+from googleapiclient.discovery import build
 import functools
 import isodate
 import logging
