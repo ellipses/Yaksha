@@ -127,6 +127,7 @@ class Frames():
         self.stats_format = '%s - [%s] - %s'
         self.knockdown_format = ' [KD Adv]: %s [Quick Rise Adv]: %s [Back Rise Adv]: %s '
 
+        self.vt_mappings = {'1': 'vtOne', '2': 'vtTwo'}
         self.custom_fields = [
             'lmaoH', 'lmaoB', 'vscoH', 'vscoB', 'vtcOnHit', 'vtcOnBlock',
             'vtcOnHitB', 'vtcOnHitF', 'vtcOnBlockB', 'vtcOnBlockF',
@@ -170,6 +171,9 @@ class Frames():
         for char in data.keys():
             
             char_moves = {}
+            # Its possible that the vtrigger moves even with the
+            # same name are lowercased. To avoid duplication, we 
+            # enforce that all the moves are lower cased. 
             moves = list(data[char]['moves']['normal'].keys())
             for m in moves:
                 v = data[char]['moves']['normal'][m]
@@ -181,7 +185,6 @@ class Frames():
             for v_trigger in v_triggers:
                 for k, v in data[char]['moves'][v_trigger].items():
                     vt_moves[k.lower()] = v
-                #vt_moves.update(data[char]['moves'][v_trigger])
             vt_only_moves = set(vt_moves) - set(char_moves)
 
             for move in chain(char_moves.keys(), vt_only_moves):
@@ -276,11 +279,10 @@ class Frames():
         else:
             # Find the move they want.
             if vt:
-                vt_mappings = {'1': 'vtOne', '2': 'vtTwo'}
                 # The move might not have any difference in vtrigger
                 # so just return the normal version.
                 try:
-                    move_data = data[char_match]['moves'][vt_mappings[vt]][move]
+                    move_data = data[char_match]['moves'][self.vt_mappings[vt]][move]
                 except KeyError:
                     move_data = data[char_match]['moves']['normal'][move]
             else:
@@ -288,7 +290,7 @@ class Frames():
                     move_data = data[char_match]['moves']['normal'][move]
                 # Might be a vtrigger only move.
                 except KeyError:
-                    move_data = data[char_match]['moves'][vt_mappings[vt]][move]
+                    move_data = data[char_match]['moves'][self.vt_mappings[vt]][move]
 
             return char_match, move, move_data
 
@@ -342,12 +344,14 @@ class Frames():
             ]
             msg_format = self.output_format
             # Have to parse knockdown advantage frames if it causes one.
-            if move_data['onHit'] == 'KD' and 'kd' in move_data:
+            if 'kd' in move_data and move_data['onHit'] == 'KD':
                 msg_format = self.output_format + self.knockdown_format
                 cmds.extend(['kd', 'kdr', 'kdrb'])
 				  
             moves = [char, move]
-            moves.extend(self.escape_chars(move_data[cmd]) for cmd in cmds)
+            moves.extend(
+                self.escape_chars(move_data.get(cmd, '-')) for cmd in cmds
+            )
             output = msg_format % tuple(moves)
 
         return output
