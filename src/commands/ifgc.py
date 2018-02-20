@@ -108,7 +108,7 @@ class Frames():
         config = config or {}
         self.url = config['frame_data']['url']
         self.info_regex = r'^-v'
-        self.regex = r'(^\S*)\s*(vtrigger|vt)?\s+(.+)'
+        self.regex = r'(^\S*)\s*(vt1|vt2)?\s+(.+)'
         self.char_ratio_thresh = 65
         self.move_ratio_thresh = 65
         self.short_mapping = {
@@ -166,29 +166,43 @@ class Frames():
         common_name_dict = {}
         numpad_dict = {}
         commands_dict = {}
+        v_triggers = ['vtTwo', 'vtOne']
         for char in data.keys():
+            
+            char_moves = {}
+            moves = list(data[char]['moves']['normal'].keys())
+            for m in moves:
+                v = data[char]['moves']['normal'][m]
+                char_moves[m.lower()] = v
+                data[char]['moves']['normal'][m.lower()] = v
+                data[char]['moves']['normal'].pop(m)
 
-            char_moves = data[char]['moves']['normal']
-            vt_moves = data[char]['moves']['vtrigger']
+            vt_moves = {}
+            for v_trigger in v_triggers:
+                for k, v in data[char]['moves'][v_trigger].items():
+                    vt_moves[k.lower()] = v
+                #vt_moves.update(data[char]['moves'][v_trigger])
             vt_only_moves = set(vt_moves) - set(char_moves)
 
             for move in chain(char_moves.keys(), vt_only_moves):
+                if move == 'undefined':
+                    continue
                 # Add the common name of the move to the dict.
                 try:
-                    common_name = char_moves[move]['commonName']
+                    common_name = char_moves[move]['cmnCmd']
                     common_name_dict[common_name] = move
                 # Some moves dont have common name so just pass.
                 except KeyError:
                     pass
 
                 try:
-                    command = char_moves[move]['plainCommand']
+                    command = char_moves[move]['plnCmd']
                 except KeyError:
-                    command = vt_moves[move]['plainCommand']
+                    command = vt_moves[move]['plnCmd']
 
                 # Add the numpad notation
                 try:
-                    numpad_dict[char_moves[move]['aCom']] = move
+                    numpad_dict[char_moves[move]['numCmd']] = move
                 except KeyError:
                     pass
                 # Wierd edge case where a vt only move has the
@@ -262,10 +276,11 @@ class Frames():
         else:
             # Find the move they want.
             if vt:
+                vt_mappings = {'1': 'vtOne', '2': 'vtTwo'}
                 # The move might not have any difference in vtrigger
                 # so just return the normal version.
                 try:
-                    move_data = data[char_match]['moves']['vtrigger'][move]
+                    move_data = data[char_match]['moves'][vt_mappings[vt]][move]
                 except KeyError:
                     move_data = data[char_match]['moves']['normal'][move]
             else:
@@ -273,7 +288,7 @@ class Frames():
                     move_data = data[char_match]['moves']['normal'][move]
                 # Might be a vtrigger only move.
                 except KeyError:
-                    move_data = data[char_match]['moves']['vtrigger'][move]
+                    move_data = data[char_match]['moves'][vt_mappings[vt]][move]
 
             return char_match, move, move_data
 
@@ -322,7 +337,7 @@ class Frames():
             )
         else:
             cmds = [
-                'plainCommand', 'startup', 'active', 'recovery', 'onHit',
+                'plnCmd', 'startup', 'active', 'recovery', 'onHit',
                 'onBlock'
             ]
             msg_format = self.output_format
@@ -340,7 +355,7 @@ class Frames():
     def format_embeded_message(self, char, move, vt, data):
         em = discord.Embed(
             title='%s' % char,
-            description='%s - %s' % (move, data['plainCommand']),
+            description='%s - %s' % (move, data['plnCmd']),
             colour=0x3998C6
         )
 
@@ -406,12 +421,14 @@ class Frames():
         if not result:
             return ("You've passed me an incorrect format %s. "
                     "The correct format is !frames character_name "
-                    "[vtrigger] move_name") % user
+                    "[vt1/vt2] move_name") % user
 
         char_name = result.group(1)
         move_name = result.group(3)
         if result.group(2):
-            vtrigger = True
+            # If either of the vtriggers matched, then we will
+            # pass the number of the matched one.
+            vtrigger = result.group(2)[-1]
         else:
             vtrigger = False
 
