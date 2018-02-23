@@ -183,8 +183,13 @@ class Frames():
 
             vt_moves = {}
             for v_trigger in v_triggers:
-                for k, v in data[char]['moves'][v_trigger].items():
-                    vt_moves[k.lower()] = v
+                v_moves = list(data[char]['moves'][v_trigger].keys())
+                for vt_move in v_moves:
+                    v = data[char]['moves'][v_trigger][vt_move]
+                    vt_moves[vt_move.lower()] = v
+                    data[char]['moves'][v_trigger][vt_move.lower()] = v
+                    data[char]['moves'][v_trigger].pop(vt_move)
+
             vt_only_moves = set(vt_moves) - set(char_moves)
 
             for move in chain(char_moves.keys(), vt_only_moves):
