@@ -205,7 +205,7 @@ class Frames():
 
                 # Add the numpad notation
                 try:
-                    numpad_dict[char_moves[move]['numCmd']] = move
+                    numpad_dict[str(char_moves[move]['numCmd'])] = move
                 except KeyError:
                     pass
                 # Wierd edge case where a vt only move has the
@@ -364,7 +364,7 @@ class Frames():
         )
 
         fields = ['startup', 'active', 'recovery', 'onHit', 'onBlock']
-        if data['onHit'] == 'KD' and 'kd' in data:
+        if data.get('onHit') == 'KD' and 'kd' in data:
             fields += ['kd', 'kdr', 'kdrb']
 
         field_mapping = {
@@ -373,13 +373,18 @@ class Frames():
             'onBlock': 'On Block', 'kd': 'Knockdown Adv',
             'kdr': 'Quick Rise Adv', 'kdrb': 'Back Roll Adv'
         }
-
+        
+        
         for field in fields:
-            em.add_field(
-                name=field_mapping[field], value=self.escape_chars(data[field])
-            )
+            if field in data:
+                em.add_field(
+                    name=field_mapping[field], value=self.escape_chars(data[field])
+                )
 
         if 'extraInfo' in data:
+            # Maybe they messed up the encoding so attemtpt to handle it.
+            if type(data['extraInfo']) == str:
+                data['extraInfo'] = json.loads(data['extraInfo'])
             em.set_footer(text=', '.join(data['extraInfo']))
         return em
 
@@ -399,6 +404,8 @@ class Frames():
         )
 
         if 'extraInfo' in data:
+            if type(data['extraInfo']) == str:
+                data['extraInfo'] = json.loads(data['extraInfo'])
             info = ' ```%s``` ' % ', '.join(data['extraInfo'])
             text_output = text_output + info
 
