@@ -178,8 +178,8 @@ class Frames():
             for m in moves:
                 v = data[char]['moves']['normal'][m]
                 char_moves[m.lower()] = v
-                data[char]['moves']['normal'][m.lower()] = v
                 data[char]['moves']['normal'].pop(m)
+                data[char]['moves']['normal'][m.lower()] = v
 
             vt_moves = {}
             for v_trigger in v_triggers:
@@ -295,7 +295,10 @@ class Frames():
                     move_data = data[char_match]['moves']['normal'][move]
                 # Might be a vtrigger only move.
                 except KeyError:
-                    move_data = data[char_match]['moves'][self.vt_mappings[vt]][move]
+                    try:
+                        move_data = data[char_match]['moves']['vtOne'][move]
+                    except KeyError:
+                        move_data = data[char_match]['moves']['vtTwo'][move]
 
             return char_match, move, move_data
 
