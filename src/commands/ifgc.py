@@ -129,11 +129,19 @@ class Frames():
 
         self.vt_mappings = {'1': 'vtOne', '2': 'vtTwo'}
         self.custom_fields = [
-            'lmaoH', 'lmaoB', 'vscoH', 'vscoB', 'vtcOnHit', 'vtcOnBlock',
-            'vtcOnHitB', 'vtcOnHitF', 'vtcOnBlockB', 'vtcOnBlockF',
-            'vtcOnHitD', 'vtcOnBlockD', 'ssOnHit', 'ssOnBlock', 'lkDashOH',
-            'lkDashOB', 'mkDashOH', 'mkDashOB', 'exDashOH', 'exDashOB',
-            'VSPGapHit', 'VSPGapBlock', 'VSKGapHit', 'VSKGapBlock',
+            'vtc2DashOnHit', 'runstopOB', 'vtc1OnHit', 'vtc2OnHit',
+            'ocOnBlock', 'ssOnHit', 'vscoH', 'vtc1OnBlockD',
+            'vtc1GapOnBlock', 'LKorMKDashOH', 'vscoB', 'LKorMKDashOB',
+            'ssOnBlock', 'vtcOnBlock', 'lmaoB', 'VSKGapBlock',
+            'vtcOnHitD', 'lmaoH', 'vt1dashOB', 'vtc2OnBlock',
+            'vtc1OnBlockB', 'vtcOnBlockD', 'vtc1OnBlock', 'hopsOnBlock',
+            'VSKGapHit', 'vtc1OnHitB', 'ocOnHit', 'vtc1OnHitF',
+            'rollcOnBlock', 'transfOH', 'exDashOB', 'VSPGapHit', 'lkDashOH',
+            'vtc1GapOnHit', 'vtc1OnBlockF', 'transfOB', 'lkDashOB',
+            'vtcOnHit', 'exDashOH', 'mkDashOB', 'runstopOH', 'vt1dashOH',
+            'rollcOnHit', 'vtc1OnHitD', 'hopsOnHit', 'vtcOnHitF',
+            'vtcOnBlockB', 'vtcOnHitB', 'vtc2GapOnBlock', 'vtcOnBlockF',
+            'vtc2DashOnBlock', 'VSPGapBlock', 'mkDashOH'
         ]
 
         self.stats_mapping = {
@@ -169,11 +177,11 @@ class Frames():
         commands_dict = {}
         v_triggers = ['vtTwo', 'vtOne']
         for char in data.keys():
-            
+
             char_moves = {}
             # Its possible that the vtrigger moves even with the
-            # same name are lowercased. To avoid duplication, we 
-            # enforce that all the moves are lower cased. 
+            # same name are lowercased. To avoid duplication, we
+            # enforce that all the moves are lower cased.
             moves = list(data[char]['moves']['normal'].keys())
             for m in moves:
                 v = data[char]['moves']['normal'][m]
@@ -325,7 +333,7 @@ class Frames():
             output = self.stats_format % (char, move, move_data[0])
 
         return output
-    
+
     def escape_chars(self, value):
         '''
         Escape characters like * to prevent discord from using it
@@ -355,7 +363,7 @@ class Frames():
             if 'kd' in move_data and move_data['onHit'] == 'KD':
                 msg_format = self.output_format + self.knockdown_format
                 cmds.extend(['kd', 'kdr', 'kdrb'])
-				  
+
             moves = [char, move]
             moves.extend(
                 self.escape_chars(move_data.get(cmd, '-')) for cmd in cmds
@@ -381,8 +389,8 @@ class Frames():
             'onBlock': 'On Block', 'kd': 'Knockdown Adv',
             'kdr': 'Quick Rise Adv', 'kdrb': 'Back Roll Adv'
         }
-        
-        
+
+
         for field in fields:
             if field in data:
                 em.add_field(
