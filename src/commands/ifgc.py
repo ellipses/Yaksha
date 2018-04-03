@@ -143,6 +143,7 @@ class Frames():
             'vtcOnBlockB', 'vtcOnHitB', 'vtc2GapOnBlock', 'vtcOnBlockF',
             'vtc2DashOnBlock', 'VSPGapBlock', 'mkDashOH'
         ]
+        self.custom_fields.sort()
 
         self.stats_mapping = {
             'dash': ('bDash', 'fDash', 'bDashDist', 'fDashDist'),
