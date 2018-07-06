@@ -141,7 +141,8 @@ class Frames():
             'vtcOnHit', 'exDashOH', 'mkDashOB', 'runstopOH', 'vt1dashOH',
             'rollcOnHit', 'vtc1OnHitD', 'hopsOnHit', 'vtcOnHitF',
             'vtcOnBlockB', 'vtcOnHitB', 'vtc2GapOnBlock', 'vtcOnBlockF',
-            'vtc2DashOnBlock', 'VSPGapBlock', 'mkDashOH'
+            'vtc2DashOnBlock', 'VSPGapBlock', 'mkDashOH',
+            'KnifeReloadOH', 'KnifeReloadOB', 'BeanBallOH', 'BeanBallOB'
         ]
         self.custom_fields.sort()
 
