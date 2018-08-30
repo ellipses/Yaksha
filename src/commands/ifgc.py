@@ -382,8 +382,9 @@ class Frames():
         )
 
         fields = ['startup', 'active', 'recovery', 'onHit', 'onBlock']
-        if data.get('onHit') == 'KD' and 'kd' in data:
-            fields += ['kd', 'kdr', 'kdrb']
+        for field in ['kd', 'kdr', 'kdrb']:
+            if field in data:
+                fields.append(field)
 
         field_mapping = {
             'startup': 'Startup', 'active': 'Active',
