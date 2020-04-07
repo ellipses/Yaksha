@@ -10,7 +10,7 @@ python-Levenshtein==0.12.0
 pytz==2016.4
 PyYAML==5.1
 regex==2016.6.14
-requests==2.10.0
+requests==2.23.0
 ruamel.yaml==0.11.11
 six==1.10.0
 umalqurra==0.2
