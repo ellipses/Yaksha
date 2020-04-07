@@ -178,6 +178,16 @@ class Frames():
         numpad_dict = {}
         commands_dict = {}
         v_triggers = ['vtTwo', 'vtOne']
+
+        # Handle chars with dots in their names by creating
+        # a copy with the dots stripped out.
+        update = []
+        for char in data.keys():
+            if '.' in char:
+                update.append(char)
+        for char in update:
+            data[char.replace('.', '')] = data[char]
+
         for char in data.keys():
 
             char_moves = {}
@@ -207,7 +217,7 @@ class Frames():
                     continue
                 # Add the common name of the move to the dict.
                 try:
-                    common_name = char_moves[move]['cmnCmd']
+                    common_name = char_moves[move]['cmnName']
                     common_name_dict[common_name] = move
                 # Some moves dont have common name so just pass.
                 except KeyError:
@@ -253,6 +263,8 @@ class Frames():
             common_name_dict = {}
             commands_dict = {}
             numpad_dict = {}
+
+
 
     def match_move(self, char, move, vt, data):
         '''

@@ -92,7 +92,7 @@ class Voting():
         start_string += '[ ' + param_string % tuple(vote_parms.keys()) + ' ]'
         start_string += ' For %s minutes.' % vote_length
 
-        await client.send_message(channel, start_string)
+        await channel.send(start_string)
 
     async def end_vote(self, client, channel, msg):
         '''
@@ -114,7 +114,7 @@ class Voting():
             winner_string = ' '.join(['%s' for index in range(len(winners))])
             end_string += ' The winners are [ **' + winner_string % tuple(winners) + '** ]'
 
-        await client.send_message(channel, end_string)
+        await channel.send(end_string)
 
     async def run_vote(self, client, channel, vote_length, msg):
         '''

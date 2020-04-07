@@ -21,9 +21,8 @@ async def on_ready():
     print(client.user.name)
     print(client.user.id)
     print('--------')
-    servers = client.servers
-    for server in servers:
-        print('Joined server %s' % server)
+    for guild in client.guilds:
+        print('Joined guild %s' % guild)
 
 
 @client.event
@@ -31,7 +30,7 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    if message.server.id in client.config.get('ignored_servers', []):
+    if message.guild.id in client.config.get('ignored_guilds', []):
         return
 
     for command in client.commands.keys():
@@ -43,7 +42,7 @@ async def on_message(message):
             command = command.lower()
             response = await client.interface.call_command(
                 command, msg, user, message.channel, client,
-                server=message.server.id
+                guild=message.guild.id
             )
             if response:
                 await send_message(response, message)
@@ -64,7 +63,7 @@ async def change_status(config):
         display_cmd = '?help | %s' % cmd
         game = discord.Game(name=display_cmd)
         try:
-            await client.change_presence(game=game)
+            await client.change_presence(activity=game)
         except discord.HTTPException:
             # Might've gotten ratelimited so just sleep for the
             # interval and try later.
@@ -89,42 +88,11 @@ async def post_request(url, data, headers):
         )
 
 
-async def publish_stats(config):
-    """
-    Publish information on the number of servers we belong
-    to.
-    """
-    await client.wait_until_ready()
-    try:
-        headers = {
-            'Authorization': config['stats']['token']
-        }
-        url = config['stats']['url'].format(bot_id=client.user.id)
-    except KeyError:
-        logging.error(
-            'Token not present in config so starting without ability'
-            ' to publish stats.'
-        )
-        return None
-
-    while True:
-        payload = {
-            "server_count": len(client.servers)
-        }
-        try:
-            await post_request(url, payload, headers)
-        except Exception:
-            # Pokemon exception catching because we dont want errors
-            # with stats update to affect the normal operation.
-            logging.exception('Failed to update stats')
-
-        await asyncio.sleep(config['stats'].get('interval', 3600))
-
-
 async def send_message(response, message):
     # Response can be a single message or a
     # tuple of message and/or embed.
     em = None
+    channel = message.channel
     if isinstance(response, tuple):
         msg, em = response
     else:
@@ -139,16 +107,16 @@ async def send_message(response, message):
             # Try sending only the embded message if it exists and fall
             # back the the text message.
             if em:
-                await client.send_message(message.channel, None, embed=em)
+                await channel.send(None, embed=em)
             else:
-                await client.send_message(message.channel, msg)
+                await channel.send(msg)
             break
         except discord.HTTPException as e:
             # Empty message error code which happens if you don't
             # have permission to send embeded message.
             if e.code in [50006, 50013]:
                 try:
-                    await client.send_message(message.channel, msg)
+                    await channel.send(msg)
                     break
                 except discord.HTTPException:
                     pass
@@ -157,7 +125,7 @@ async def send_message(response, message):
     else:
         logging.error(
             'Failed sending %s and %s to %s in %s after %s retries' % (
-                msg, em, message.channel, message.server, client.max_retries
+                msg, em, message.channel, message.guild, client.max_retries
             )
         )
 
@@ -172,10 +140,8 @@ def main():
     client.max_retries = config.get('max_retries', 3)
     client.config = config
     client.interface = interface.Interface(config, client.commands)
-
     token = config['discord']['token']
     client.loop.create_task(change_status(config))
-    client.loop.create_task(publish_stats(config))
     client.run(token)
 
 

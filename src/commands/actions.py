@@ -555,7 +555,7 @@ class Reminder():
         '''
         time = time.replace(microsecond=0)
         msg = ":+1: %s I'll remind you at %s UTC." % (user, str(time))
-        await client.send_message(channel, msg)
+        await channel.send(msg)
 
     async def send_reminder_end_msg(self, user, channel, client, text):
         '''
@@ -567,7 +567,7 @@ class Reminder():
                                                                       text)
         else:
             msg = 'Hello %s, you asked me to remind you at this time.' % user
-        await client.send_message(channel, msg)
+        await channel.send(msg)
 
     async def start_reminder_sleep(self, delta, user, channel, client, text, time):
         '''
