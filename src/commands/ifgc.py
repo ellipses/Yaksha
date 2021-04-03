@@ -394,7 +394,7 @@ class Frames():
         )
 
         fields = ['startup', 'active', 'recovery', 'onHit', 'onBlock']
-        for field in ['kd', 'kdr', 'kdrb']:
+        for field in ['kd', 'kdr', 'kdrb', 'hcWinSpCa', "hcWinVt", "hcWinTc"]:
             if field in data:
                 fields.append(field)
 
@@ -402,7 +402,9 @@ class Frames():
             'startup': 'Startup', 'active': 'Active',
             'recovery': 'Recovery', 'onHit': 'On Hit',
             'onBlock': 'On Block', 'kd': 'Knockdown Adv',
-            'kdr': 'Quick Rise Adv', 'kdrb': 'Back Roll Adv'
+            'kdr': 'Quick Rise Adv', 'kdrb': 'Back Roll Adv',
+            'hcWinSpCa': "Specials & CAs Hit Confirm", "hcWinVt": "V-Trigger Hit Confirm",
+            "hcWinTc": "Target Combos Hit Confirm"
         }
 
 
