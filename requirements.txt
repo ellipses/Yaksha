@@ -14,7 +14,7 @@ requests==2.23.0
 ruamel.yaml==0.11.11
 six==1.10.0
 umalqurra==0.2
-websockets==3.1
+websockets==9.1
 google-api-python-client
 asyncio_redis
 isodate
