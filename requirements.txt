@@ -1,4 +1,4 @@
-aiohttp==0.21.6
+aiohttp==3.7.4
 beautifulsoup4==4.4.1
 chardet==2.3.0
 dateparser==0.4.0
