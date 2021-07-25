@@ -506,6 +506,9 @@ class Frames():
             else:
                 return text_output
 
+    @register('!sfv')
+    async def _get_frames(self, *args, **kwargs):
+        return await self.get_frames(*args, **kwargs)
 
 class GGFrames(Frames):
 
@@ -560,3 +563,7 @@ class GGFrames(Frames):
                 char, move, vtrigger, data, cmd_type='numCmd'
             )
             return self.add_custom_fields(data, text_output, embed_output)
+
+    @register('!strive')
+    async def _get_frames(self, *args, **kwargs):
+        return await self.get_frames(*args, **kwargs)
