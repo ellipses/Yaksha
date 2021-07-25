@@ -412,7 +412,7 @@ class Frames():
             "guardLevel": "Guard Level",
             "cancelsTo": "Cancels To",
             "gatling": "Gatling",
-            "prorate": "Protate"
+            "prorate": "Prorate"
         }
 
         for field in fields:
