@@ -514,6 +514,20 @@ class GGFrames(Frames):
         super().__init__(config)
         self.url = config['frame_data']['ggst_url']
 
+    @memoize(60 * 60 * 24 * 7)
+    async def get_gg_data(self, **kwargs):
+        '''
+        Simple helper function that hits the frame data dump
+        endpoint and returns the contents in json format.
+        '''
+        resp = await get_request(self.url)
+        if resp:
+            frame_data = json.loads(resp)
+            self.add_reverse_mapping(frame_data, **kwargs)
+            return frame_data
+        else:
+            return False
+
     @register('!ggst')
     async def get_frames(self, msg, user, *args, **kwargs):
         result = re.search(self.regex, msg)
@@ -521,7 +535,7 @@ class GGFrames(Frames):
         move_name = result.group(3)
 
         vtrigger = False
-        frame_data = await self.get_data(vtrigger=False)
+        frame_data = await self.get_gg_data(vtrigger=False)
         if not frame_data:
             return 'Got an error when trying to get frame data :(.'
         matched_value = self.match_move(char_name, move_name,
