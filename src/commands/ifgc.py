@@ -359,7 +359,7 @@ class Frames():
         except AttributeError:
             return value
 
-    def format_output(self, char, move, vt, move_data, data, searched_move):
+    def format_output(self, char, move, vt, move_data, data, searched_move, cmd_type='plnCmd'):
         '''
         Formats the msg to a nicely spaced string for
         presentation.
@@ -370,7 +370,7 @@ class Frames():
             )
         else:
             cmds = [
-                'plnCmd', 'startup', 'active', 'recovery', 'onHit',
+                cmd_type, 'startup', 'active', 'recovery', 'onHit',
                 'onBlock'
             ]
             msg_format = self.output_format
@@ -387,10 +387,10 @@ class Frames():
 
         return output
 
-    def format_embeded_message(self, char, move, vt, data):
+    def format_embeded_message(self, char, move, vt, data, cmd_type='plnCmd'):
         em = discord.Embed(
             title='%s' % char,
-            description='%s - %s' % (move, data['plnCmd']),
+            description='%s - %s' % (move, data[cmd_type]),
             colour=0x3998C6
         )
 
@@ -548,9 +548,10 @@ class GGFrames(Frames):
         else:
             char, move, data = matched_value
             text_output = self.format_output(
-                char, move, vtrigger, data, frame_data, move_name
+                char, move, vtrigger, data, frame_data,
+                move_name, cmd_type='numCmd'
             )
             embed_output = self.format_embeded_message(
-                char, move, vtrigger, data
+                char, move, vtrigger, data, cmd_type='numCmd'
             )
             return self.add_custom_fields(data, text_output, embed_output)
