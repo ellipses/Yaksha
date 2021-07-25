@@ -207,10 +207,11 @@ class Frames():
                 for vt_move in v_moves:
                     v = data[char]['moves'][v_trigger][vt_move]
                     vt_moves[vt_move.lower()] = v
-                    data[char]['moves'][v_trigger][vt_move.lower()] = v
                     data[char]['moves'][v_trigger].pop(vt_move)
+                    data[char]['moves'][v_trigger][vt_move.lower()] = v
 
             vt_only_moves = set(vt_moves) - set(char_moves)
+
 
             for move in chain(char_moves.keys(), vt_only_moves):
                 if move == 'undefined':
@@ -263,8 +264,6 @@ class Frames():
             common_name_dict = {}
             commands_dict = {}
             numpad_dict = {}
-
-
 
     def match_move(self, char, move, vt, data):
         '''
