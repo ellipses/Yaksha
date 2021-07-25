@@ -530,6 +530,11 @@ class GGFrames(Frames):
     @register('!ggst')
     async def get_frames(self, msg, user, *args, **kwargs):
         result = re.search(self.regex, msg)
+
+        if not result:
+            return ("You've passed me an incorrect format %s. "
+                    "The correct format is !ggst character_name "
+                    "move_name") % user
         char_name = result.group(1)
         move_name = result.group(3)
 
@@ -539,6 +544,7 @@ class GGFrames(Frames):
             return 'Got an error when trying to get frame data :(.'
         matched_value = self.match_move(char_name, move_name,
                                         vtrigger, frame_data)
+
 
         if not matched_value:
             return ("%s with %s is not a valid "
