@@ -490,9 +490,8 @@ class Frames():
         matched_value = self.match_move(char_name, move_name,
                                         vtrigger, frame_data)
         if not matched_value:
-            return ("Don't waste my time %s. %s with %s is not a valid "
-                    "character/move combination for SFV.") % (user,
-                                                              char_name,
+            return ("%s with %s is not a valid "
+                    "character/move combination for SFV.") % (char_name,
                                                               move_name)
         else:
             char, move, data = matched_value
@@ -507,6 +506,9 @@ class Frames():
             else:
                 return text_output
 
+    @register('!sfv')
+    async def _get_frames(self, *args, **kwargs):
+        return await self.get_frames(*args, **kwargs)
 
 class GGFrames(Frames):
 
@@ -531,6 +533,11 @@ class GGFrames(Frames):
     @register('!ggst')
     async def get_frames(self, msg, user, *args, **kwargs):
         result = re.search(self.regex, msg)
+
+        if not result:
+            return ("You've passed me an incorrect format %s. "
+                    "The correct format is !ggst character_name "
+                    "move_name") % user
         char_name = result.group(1)
         move_name = result.group(3)
 
@@ -540,6 +547,7 @@ class GGFrames(Frames):
             return 'Got an error when trying to get frame data :(.'
         matched_value = self.match_move(char_name, move_name,
                                         vtrigger, frame_data)
+
 
         if not matched_value:
             return ("%s with %s is not a valid "
@@ -555,3 +563,7 @@ class GGFrames(Frames):
                 char, move, vtrigger, data, cmd_type='numCmd'
             )
             return self.add_custom_fields(data, text_output, embed_output)
+
+    @register('!strive')
+    async def _get_frames(self, *args, **kwargs):
+        return await self.get_frames(*args, **kwargs)
