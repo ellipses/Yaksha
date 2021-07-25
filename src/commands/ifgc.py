@@ -162,12 +162,12 @@ class Frames():
         resp = await get_request(self.url)
         if resp:
             frame_data = json.loads(resp)
-            self.add_reverse_mapping(frame_data)
+            self.add_reverse_mapping(frame_data, **kwargs)
             return frame_data
         else:
             return False
 
-    def add_reverse_mapping(self, data):
+    def add_reverse_mapping(self, data, vtrigger=True):
         '''
         Create a reverse mapping between common names,
         move command and the actual name of the moves.
@@ -201,16 +201,19 @@ class Frames():
                 data[char]['moves']['normal'].pop(m)
                 data[char]['moves']['normal'][m.lower()] = v
 
-            vt_moves = {}
-            for v_trigger in v_triggers:
-                v_moves = list(data[char]['moves'][v_trigger].keys())
-                for vt_move in v_moves:
-                    v = data[char]['moves'][v_trigger][vt_move]
-                    vt_moves[vt_move.lower()] = v
-                    data[char]['moves'][v_trigger][vt_move.lower()] = v
-                    data[char]['moves'][v_trigger].pop(vt_move)
+            vt_only_moves = set()
+            if vtrigger:
+                vt_moves = {}
+                for v_trigger in v_triggers:
+                    v_moves = list(data[char]['moves'][v_trigger].keys())
+                    for vt_move in v_moves:
+                        v = data[char]['moves'][v_trigger][vt_move]
+                        vt_moves[vt_move.lower()] = v
+                        data[char]['moves'][v_trigger].pop(vt_move)
+                        data[char]['moves'][v_trigger][vt_move.lower()] = v
 
-            vt_only_moves = set(vt_moves) - set(char_moves)
+                vt_only_moves = set(vt_moves) - set(char_moves)
+
 
             for move in chain(char_moves.keys(), vt_only_moves):
                 if move == 'undefined':
@@ -263,8 +266,6 @@ class Frames():
             common_name_dict = {}
             commands_dict = {}
             numpad_dict = {}
-
-
 
     def match_move(self, char, move, vt, data):
         '''
@@ -394,7 +395,9 @@ class Frames():
         )
 
         fields = ['startup', 'active', 'recovery', 'onHit', 'onBlock']
-        for field in ['kd', 'kdr', 'kdrb', 'hcWinSpCa', "hcWinVt", "hcWinTc"]:
+        sf_fields = ['kd', 'kdr', 'kdrb', 'hcWinSpCa', "hcWinVt", "hcWinTc"]
+        ggst_field = ['riscGain', 'prorate', 'guardLevel', 'attackLevel', 'cancelsTo', 'gatling']
+        for field in (sf_fields + ggst_field):
             if field in data:
                 fields.append(field)
 
@@ -404,7 +407,13 @@ class Frames():
             'onBlock': 'On Block', 'kd': 'Knockdown Adv',
             'kdr': 'Quick Rise Adv', 'kdrb': 'Back Roll Adv',
             'hcWinSpCa': "Specials & CAs Hit Confirm", "hcWinVt": "V-Trigger Hit Confirm",
-            "hcWinTc": "Target Combos Hit Confirm"
+            "hcWinTc": "Target Combos Hit Confirm",
+            "riscGain": "Risc Gain",
+            "guardLevel": "Guard Level",
+            "attacklevel": "Aattack Level",
+            "cancelsTo": "Cancels To",
+            "gatling": "Gatling",
+            "protate": "Protate"
         }
 
 
@@ -499,3 +508,38 @@ class Frames():
                 return self.add_custom_fields(data, text_output, embed_output)
             else:
                 return text_output
+
+
+class GGFrames(Frames):
+
+    def __init__(self, config):
+        super().__init__(config)
+        self.url = config['frame_data']['ggst_url']
+
+    @register('!ggst')
+    async def get_frames(self, msg, user, *args, **kwargs):
+        result = re.search(self.regex, msg)
+        char_name = result.group(1)
+        move_name = result.group(3)
+
+        vtrigger = False
+        frame_data = await self.get_data(vtrigger=False)
+        if not frame_data:
+            return 'Got an error when trying to get frame data :(.'
+        matched_value = self.match_move(char_name, move_name,
+                                        vtrigger, frame_data)
+
+        if not matched_value:
+            return ("%s with %s is not a valid "
+                    "character/move combination for GGST") % (char_name,
+                                                              move_name)
+        else:
+            char, move, data = matched_value
+            text_output = self.format_output(
+                char, move, vtrigger, data, frame_data, move_name
+            )
+            embed_output = self.format_embeded_message(
+                char, move, vtrigger, data
+            )
+            return self.add_custom_fields(data, text_output, embed_output)
+
