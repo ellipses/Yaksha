@@ -167,7 +167,7 @@ class Frames():
         else:
             return False
 
-    def add_reverse_mapping(self, data, vtrigger=True):
+    def add_reverse_mapping(self, data, vtrigger=True, **kwargs):
         '''
         Create a reverse mapping between common names,
         move command and the actual name of the moves.
@@ -396,7 +396,7 @@ class Frames():
 
         fields = ['startup', 'active', 'recovery', 'onHit', 'onBlock']
         sf_fields = ['kd', 'kdr', 'kdrb', 'hcWinSpCa', "hcWinVt", "hcWinTc"]
-        ggst_field = ['riscGain', 'prorate', 'guardLevel', 'attackLevel', 'cancelsTo', 'gatling']
+        ggst_field = ['riscGain', 'prorate', 'guardLevel', 'gatling']
         for field in (sf_fields + ggst_field):
             if field in data:
                 fields.append(field)
@@ -410,12 +410,10 @@ class Frames():
             "hcWinTc": "Target Combos Hit Confirm",
             "riscGain": "Risc Gain",
             "guardLevel": "Guard Level",
-            "attacklevel": "Aattack Level",
             "cancelsTo": "Cancels To",
             "gatling": "Gatling",
-            "protate": "Protate"
+            "prorate": "Protate"
         }
-
 
         for field in fields:
             if field in data:
@@ -542,4 +540,3 @@ class GGFrames(Frames):
                 char, move, vtrigger, data
             )
             return self.add_custom_fields(data, text_output, embed_output)
-
