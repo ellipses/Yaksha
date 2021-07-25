@@ -30,7 +30,7 @@ common_actions:
   '!ggst': >
     Get Guilty Gear Strive frame data for the char and move.
     Also works with stats of the char like fdash, bdash, throw etc.
-    Usage: ```!ggst Sol 5p``` ```!frames sol throw```
+    Usage: ```!ggst Sol 5p``` ```!ggst sol throw```
   '!frames': >
     Get SFV frame data for the specified char and move. Also
     works with stats of the char like fdash, bdash, throw range etc.
