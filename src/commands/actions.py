@@ -269,10 +269,6 @@ class Simpsons(Shows):
         self.api_url = 'https://frinkiac.com/api/search?q=%s'
 
     @register('!simpsons')
-    async def get_simpsons_gif(self, *args, **kwargs):
-        return await super(Simpsons, self).get_gif(*args, **kwargs)
-
-    @register('!scaption')
     async def get_captioned_simpsons_gif(self, *args, **kwargs):
         return await super(Simpsons, self).get_captioned_gif(*args, **kwargs)
 
@@ -287,10 +283,6 @@ class Futurama(Shows):
         self.api_url = 'https://morbotron.com/api/search?q=%s'
 
     @register('!futurama')
-    async def get_futurame_gif(self, *args, **kwargs):
-        return await super(Futurama, self).get_gif(*args, **kwargs)
-
-    @register('!fcaption')
     async def get_captioned_futurama_gif(self, *args, **kwargs):
         return await super(Futurama, self).get_captioned_gif(*args, **kwargs)
 

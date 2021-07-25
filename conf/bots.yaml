@@ -31,49 +31,18 @@ common_actions:
     Get Guilty Gear Strive frame data for the char and move.
     Also works with stats of the char like fdash, bdash, throw etc.
     Usage: ```!ggst Sol 5p``` ```!frames sol throw```
-  '!gif': >
-    Returns the most relevant gif for the caption using Giffy.
-    Usage ```!gif obama mic drop```
   '!frames': >
     Get SFV frame data for the specified char and move. Also
     works with stats of the char like fdash, bdash, throw range etc.
     Use optional parameter -v for more info on the move.
     Usage: ```!frames Ryu cr.mk``` ```!frames Nash phrase``` ```!frames-v Ryu shoryu```
-  '!scaption': >
-    Same as !simpsons but also displays the caption in the
-    obtained gif. Usage ```!scaption nothing at all```
   '!simpsons': >
     Get a simpsons gif that matches the specified caption.
     Usage```!simpsons nothing at all```.
-    Can also use ```!simpsons-ex[optional time in seconds]```
-    where it will extend the gif by the specified seconds.
-    Gets the longest gif possible if no time is specified.
-  '!fcaption': >
-    Same as !futurama but also displays the caption in the
-    obtained gif. Usage ```!fcaption Oh you're serious let me laugh even harder.```
   '!futurama': >
     Get a futurama gif that matches the specified caption.
     Usage```!futurama Oh you're serious let me laugh even harder.```.
-    Can also use ```!futurama-ex[optional time in seconds]```
-    where it will extend the gif by the specified seconds. Gets the
-    longest gif possible if no time is specified.
-  '!vote': >
-    Start a vote in the channel for the specified length and
-    topic. Usage ```!vote[--time] Vote topic [parameter1, parm2] ``` '
-  '!remindme': >
-    Get Yaksha to remind to at a specified time.
-    Usage ```!remindme <time period> [optional string]```
-  '!shuffle': >
-    Randomly select a word from a supplied list of words.
-    Usage ```!shuffle yes no maybe```'
   '?help': 'Get help on a command. Usage ```?help command_name```'
-  '!add': >
-    Create a tag to return a specific string.
-    Usage ```!add [tag_name]
-    some_long_or_short_string_can_be_link```
-  '!get': >
-    Get the string corresponding to the saved command.
-    Usage: ```!get tag_name```
   '!charming': 'Gets my boi prince charming.'
 admin_actions:
   '!blacklist': 'Blacklists a user. Usage ```!blacklist user1 [user2 user3]```'
