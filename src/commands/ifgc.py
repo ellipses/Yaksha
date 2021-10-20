@@ -202,8 +202,8 @@ class Frames():
                 data[char]['moves']['normal'][m.lower()] = v
 
             vt_only_moves = set()
+            vt_moves = {}
             if vtrigger:
-                vt_moves = {}
                 for v_trigger in v_triggers:
                     v_moves = list(data[char]['moves'][v_trigger].keys())
                     for vt_move in v_moves:
@@ -229,7 +229,10 @@ class Frames():
                 try:
                     command = char_moves[move]['plnCmd']
                 except KeyError:
-                    command = vt_moves[move]['plnCmd']
+                    try:
+                        command = vt_moves[move]['plnCmd']
+                    except KeyError:
+                        pass
 
                 # Add the numpad notation
                 try:
@@ -396,7 +399,7 @@ class Frames():
 
         fields = ['startup', 'active', 'recovery', 'onHit', 'onBlock']
         sf_fields = ['kd', 'kdr', 'kdrb', 'hcWinSpCa', "hcWinVt", "hcWinTc"]
-        ggst_field = ['riscGain', 'prorate', 'guardLevel', 'gatling']
+        ggst_field = ['riscGain', 'prorate', 'guardLevel', 'gatling', 'kda']
         for field in (sf_fields + ggst_field):
             if field in data:
                 fields.append(field)
@@ -412,7 +415,8 @@ class Frames():
             "guardLevel": "Guard Level",
             "cancelsTo": "Cancels To",
             "gatling": "Gatling",
-            "prorate": "Prorate"
+            "prorate": "Prorate",
+            "kda": "Knockdown Adv",
         }
 
         for field in fields:
