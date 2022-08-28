@@ -1,18 +1,14 @@
 discord:
-  token: 'some_token'
+  token: ''
   max_retries: 10
+  application_id: ''
+  debug_guild_id: ''
 frame_data:
   url: ''
   ggst_url: ''
-blacklist_file: 'blacklist_file.txt'
-irc:
-  channels:
-    - '#'
 stats:
   url: https://bots.discord.pw/api/bots/{bot_id}/stats
   token: 'some_other_token'
-admins:
-  - ''
 frinkiac:
     # 31 * 200
     max_timespan: 6200
@@ -21,38 +17,26 @@ frinkiac:
     api_url:
     gif_url:
     caption_url:
-add_commands:
-  file: additional_commands.txt
-arbitary:
-  skins: filename
 common_actions:
   # commands: Help text
-  '!ggst': >
+  'ggst': >
     Get Guilty Gear Strive frame data for the char and move.
     Also works with stats of the char like fdash, bdash, throw etc.
     Usage: ```!ggst Sol 5p``` ```!ggst sol throw```
-  '!strive': >
+  'strive': >
     Get Guilty Gear Strive frame data for the char and move.
     Also works with stats of the char like fdash, bdash, throw etc.
     Usage: ```!strive Sol 5p``` ```!strive sol throw```
-  '!frames': >
-    Get SFV frame data for the specified char and move. Also
-    works with stats of the char like fdash, bdash, throw range etc.
-    Use optional parameter -v for more info on the move.
-    Usage: ```!frames Ryu cr.mk``` ```!frames Nash phrase``` ```!frames-v Ryu shoryu```
-  '!sfv': >
+  'sfv': >
     Get SFV frame data for the specified char and move. Also
     works with stats of the char like fdash, bdash, throw range etc.
     Use optional parameter -v for more info on the move.
     Usage: ```!sfv Ryu cr.mk``` ```!sfv Nash phrase``` ```!sfv-v Ryu shoryu```
-  '!simpsons': >
+  'simpsons': >
     Get a simpsons gif that matches the specified caption.
     Usage```!simpsons nothing at all```.
-  '!futurama': >
+  'futurama': >
     Get a futurama gif that matches the specified caption.
     Usage```!futurama Oh you're serious let me laugh even harder.```.
-  '?help': 'Get help on a command. Usage ```?help command_name```'
-  '!charming': 'Gets my boi prince charming.'
-admin_actions:
-  '!blacklist': 'Blacklists a user. Usage ```!blacklist user1 [user2 user3]```'
-  '!unblacklist': 'Unblacklists a user. Usage ```!unblacklist user1 [user2 user3]```'
+  'help': 'Get help on a command. Usage ```?help command_name```'
+  'charming': 'Gets my boi prince charming.'

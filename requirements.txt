@@ -1,23 +1,5 @@
-aiohttp==3.7.4
-beautifulsoup4==4.4.1
-chardet==2.3.0
-dateparser==0.4.0
 fuzzywuzzy==0.10.0
-jdatetime==1.8.1
-pycparser==2.14
-python-dateutil==2.5.3
-python-Levenshtein==0.12.0
-pytz==2016.4
+python-Levenshtein==0.12.1
 PyYAML==5.4
-regex==2016.6.14
 requests==2.23.0
-ruamel.yaml==0.11.11
-six==1.10.0
-umalqurra==0.2
-websockets==9.1
-google-api-python-client
-asyncio_redis
-isodate
-irc3
-aiofiles
 # To install discord do pip install -U discord.py

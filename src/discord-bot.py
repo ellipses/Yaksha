@@ -1,149 +1,120 @@
 #!/usr/bin/python
-import re
 import os
 import yaml
 import logging
 import discord
 import asyncio
-import requests
 import interface
-import functools
-import itertools
+from typing import Optional
+from typing import Literal
 
+from discord import app_commands
 
 logging.basicConfig(level=logging.INFO)
-client = discord.Client()
 
 
-@client.event
-async def on_ready():
-    print('Logged in as')
-    print(client.user.name)
-    print(client.user.id)
-    print('--------')
-    for guild in client.guilds:
-        print('Joined guild %s' % guild)
+class MyClient(discord.Client):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tree = app_commands.CommandTree(self)
 
+    async def on_ready(self):
+        print("Logged in as")
+        print(client.user.name)
+        print(client.user.id)
+        print("--------")
+        for guild in client.guilds:
+            print("Joined guild %s" % guild)
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
-
-    if message.guild.id in client.config.get('ignored_guilds', []):
-        return
-
-    for command in client.commands.keys():
-        msg = message.content
-        user = message.author.mention
-        if msg.lower().startswith(command.lower()):
-
-            msg = msg[len(command):].strip()
-            command = command.lower()
-            response = await client.interface.call_command(
-                command, msg, user, message.channel, client,
-                guild=message.guild.id
-            )
-            if response:
-                await send_message(response, message)
-            break
-
-
-async def change_status(config):
-    """
-    Update the "Playing x" status to display bot
-    commands.
-    """
-    await client.wait_until_ready()
-    commands = itertools.chain(
-        config['common_actions'].keys(),
-        config.get('discord_actions', {}).keys()
-    )
-    for cmd in itertools.cycle(commands):
-        display_cmd = '?help | %s' % cmd
+    async def update_playing_status(self):
+        """
+        Update the "Playing x" status to display bot
+        commands.
+        """
+        await self.wait_until_ready()
+        display_cmd = "/sfv | /ggst"
         game = discord.Game(name=display_cmd)
-        try:
-            await client.change_presence(activity=game)
-        except discord.HTTPException:
-            # Might've gotten ratelimited so just sleep for the
-            # interval and try later.
-            logging.exception('Exception when trying to change status.')
-            pass
-        await asyncio.sleep(
-            config.get('discord', {}).get('status_interval', 3600)
-        )
-
-
-async def post_request(url, data, headers):
-    future = client.loop.run_in_executor(
-        None, functools.partial(
-            requests.post, url, json=data, headers=headers
-        )
-    )
-    resp = await future
-    if not resp:
-        logging.error(
-            'Posting stats failed with %s because %s',
-            resp.status_code, resp.content
-        )
-
-
-async def send_message(response, message):
-    # Response can be a single message or a
-    # tuple of message and/or embed.
-    em = None
-    channel = message.channel
-    if isinstance(response, tuple):
-        msg, em = response
-    else:
-        msg = response
-    # Prepend the message with zero width white space char to
-    # avoid bot loops.
-    if msg:
-        msg = '\u200B' + msg
-
-    for _ in range(client.max_retries):
-        try:
-            # Try sending only the embded message if it exists and fall
-            # back the the text message.
-            if em:
-                await channel.send(None, embed=em)
-            else:
-                await channel.send(msg)
-            break
-        except discord.HTTPException as e:
-            # Empty message error code which happens if you don't
-            # have permission to send embeded message.
-            if e.code in [50006, 50013]:
-                try:
-                    await channel.send(msg)
-                    break
-                except discord.HTTPException:
-                    pass
-            logging.exception('failed to send message')
-            await asyncio.sleep(0.1)
-    else:
-        logging.error(
-            'Failed sending %s and %s to %s in %s after %s retries' % (
-                msg, em, message.channel, message.guild, client.max_retries
+        while not self.is_closed():
+            try:
+                await client.change_presence(activity=game)
+            except discord.HTTPException:
+                # Might've gotten ratelimited so just sleep for the
+                # interval and try later.
+                logging.exception("Exception when trying to change status.")
+            await asyncio.sleep(
+                self.config.get("discord", {}).get("status_interval", 3600)
             )
-        )
+
+    async def setup_hook(self):
+        self.loop.create_task(self.update_playing_status())
+        debug_guild_id = self.config["discord"].get("debug_guild_id")
+        if debug_guild_id:
+            debug_guild = discord.Object(id=debug_guild_id)
+            # This copies the global commands over to your guild.
+            self.tree.copy_global_to(guild=debug_guild)
+            await self.tree.sync(guild=debug_guild)
+        else:
+            await self.tree.sync()
+
+
+config_path = os.path.join(os.path.dirname(__file__), "../conf/bots.yaml")
+config = yaml.load(open(config_path).read())
+client = MyClient(
+    intents=discord.Intents.default(),
+    application_id=config["discord"]["application_id"],
+)
+
+
+@client.tree.command()
+@app_commands.describe(
+    char_name="The characters name",
+    move_name="The move name",
+    vtrigger="Optional vtrigger mode"
+)
+async def sfv(
+    interaction: discord.Interaction,
+    char_name: str,
+    move_name: str,
+    vtrigger: Optional[Literal['vt1', 'vt2']],
+):
+    """Get SFV frame data for the specific char and move.
+
+    Also works with stats of the char like fdash, bdash, throw range etc."""
+    return await client.tree_interface.handle_slash_command(
+        interaction, "sfv", char_name, move_name, vtrigger
+    )
+
+
+@client.tree.command()
+@app_commands.describe(
+    char_name="The characters name",
+    move_name="The move name",
+)
+async def ggst(interaction: discord.Interaction, char_name: str, move_name: str):
+    """Get Guilty Gear Strive frame data for the specific char and move.
+
+    Also works with stats of the char like fdash, bdash, throw range etc."""
+    return await client.tree_interface.handle_slash_command(
+        interaction, "ggst", char_name, move_name
+    )
+
+
+@client.tree.command()
+async def charming(interaction: discord.Interaction):
+    """charming"""
+    return await client.tree_interface.handle_slash_command(interaction, "charming")
 
 
 def main():
-    config_path = os.path.join(os.path.dirname(__file__),
-                               '../conf/bots.yaml')
-    config = yaml.load(open(config_path).read())
-    client.commands = config.get('common_actions', {}).copy()
-    client.commands.update(config.get('discord_actions', {}))
-    client.commands.update(config.get('admin_actions', {}))
-    client.max_retries = config.get('max_retries', 3)
+    client.commands = config.get("common_actions", {}).copy()
+    client.commands.update(config.get("discord_actions", {}))
+    client.commands.update(config.get("admin_actions", {}))
+    client.max_retries = config.get("max_retries", 3)
     client.config = config
-    client.interface = interface.Interface(config, client.commands)
-    token = config['discord']['token']
-    client.loop.create_task(change_status(config))
+    client.tree_interface = interface.TreeHandling(client, config)
+    token = config["discord"]["token"]
     client.run(token)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
