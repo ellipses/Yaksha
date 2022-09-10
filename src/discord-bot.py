@@ -6,8 +6,10 @@ import discord
 import asyncio
 import interface
 from typing import Optional
-from typing import Literal
+from typing import Literal, List
+import time
 
+start_time = time.time()
 from discord import app_commands
 
 logging.basicConfig(level=logging.INFO)
@@ -25,6 +27,8 @@ class MyClient(discord.Client):
         print("--------")
         for guild in client.guilds:
             print("Joined guild %s" % guild)
+        print("total time")
+        print(time.time() - start_time)
 
     async def update_playing_status(self):
         """
@@ -47,6 +51,7 @@ class MyClient(discord.Client):
 
     async def setup_hook(self):
         self.loop.create_task(self.update_playing_status())
+        self.loop.create_task(self.tree_interface.load())
         debug_guild_id = self.config["discord"].get("debug_guild_id")
         if debug_guild_id:
             debug_guild = discord.Object(id=debug_guild_id)
@@ -69,13 +74,13 @@ client = MyClient(
 @app_commands.describe(
     char_name="The characters name",
     move_name="The move name",
-    vtrigger="Optional vtrigger mode"
+    vtrigger="Optional vtrigger mode",
 )
 async def sfv(
     interaction: discord.Interaction,
     char_name: str,
     move_name: str,
-    vtrigger: Optional[Literal['vt1', 'vt2']],
+    vtrigger: Optional[Literal["vt1", "vt2"]],
 ):
     """Get SFV frame data for the specific char and move.
 
@@ -83,6 +88,10 @@ async def sfv(
     return await client.tree_interface.handle_slash_command(
         interaction, "sfv", char_name, move_name, vtrigger
     )
+
+
+def populate_choices(values):
+    return [app_commands.Choice(name=value, value=value) for value in values]
 
 
 @client.tree.command()
@@ -97,6 +106,58 @@ async def ggst(interaction: discord.Interaction, char_name: str, move_name: str)
     return await client.tree_interface.handle_slash_command(
         interaction, "ggst", char_name, move_name
     )
+
+
+@sfv.autocomplete("char_name")
+async def char_autocomplete(
+    interaction: discord.Interaction,
+    current: str,
+) -> List[app_commands.Choice[str]]:
+    return populate_choices(
+        await client.tree_interface.autocomplete_char("sfv", current)
+    )
+
+
+@sfv.autocomplete("move_name")
+async def move_autocomplete(
+    interaction: discord.Interaction,
+    current: str,
+) -> List[app_commands.Choice[str]]:
+    if not interaction.namespace.char_name:
+        return populate_choices([])
+
+    else:
+        return populate_choices(
+            await client.tree_interface.autocomplete_move(
+                "sfv", interaction.namespace.char_name, current
+            )
+        )
+
+
+@ggst.autocomplete("char_name")
+async def char_autocomplete(
+    interaction: discord.Interaction,
+    current: str,
+) -> List[app_commands.Choice[str]]:
+    return populate_choices(
+        await client.tree_interface.autocomplete_char("ggst", current)
+    )
+
+
+@ggst.autocomplete("move_name")
+async def move_autocomplete(
+    interaction: discord.Interaction,
+    current: str,
+) -> List[app_commands.Choice[str]]:
+    if not interaction.namespace.char_name:
+        return populate_choices([])
+
+    else:
+        return populate_choices(
+            await client.tree_interface.autocomplete_move(
+                "ggst", interaction.namespace.char_name, current
+            )
+        )
 
 
 @client.tree.command()

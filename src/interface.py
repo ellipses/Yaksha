@@ -3,20 +3,39 @@ import asyncio
 import discord
 import logging
 from commands import ifgc, actions
+import time
 
 
 class TreeHandling:
     def __init__(self, client, config):
         self.client = client
-        sf_module = ifgc.Frames(config)
-        gg_module = ifgc.GGFrames(config)
+        self.sf_module = ifgc.Frames(config)
+        self.gg_module = ifgc.GGFrames(config)
         actions_module = actions.Arbitary(config)
+        self.module_mapping = {
+            "sfv": self.sf_module,
+            "ggst": self.gg_module,
+        }
         self.command_mapping = {
-            "sfv": sf_module.slash_sfv,
-            "strive": gg_module.slash_strive,
-            "ggst": gg_module.slash_strive,
+            "sfv": self.sf_module.slash_sfv,
+            "ggst": self.gg_module.slash_strive,
             "charming": actions_module.charming,
         }
+
+    async def load(self):
+        start_time = time.time()
+        for _, module in self.module_mapping.items():
+            await module.get_data()
+        print("Interface init time is")
+        print(time.time() - start_time)
+
+    async def autocomplete_char(self, module_name, char_name):
+        return await self.module_mapping[module_name].autocomplete_char(char_name)
+
+    async def autocomplete_move(self, module_name, char_name, move_name):
+        return await self.module_mapping[module_name].autocomplete_move(
+            char_name, move_name
+        )
 
     async def handle_slash_command(self, interaction, command, *args, **kwargs):
 
