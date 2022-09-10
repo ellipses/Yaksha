@@ -3,7 +3,8 @@ import re
 import json
 import discord
 from itertools import chain
-from fuzzywuzzy import process
+from itertools import islice
+from fuzzywuzzy import process, fuzz
 from collections import OrderedDict
 from commands.utilities import memoize, get_request, register
 
@@ -114,7 +115,7 @@ class Frames:
         }
 
     @memoize(300)
-    async def get_data(self, **kwargs):
+    async def get_sf_data(self, **kwargs):
         """
         Simple helper function that hits the frame data dump
         endpoint and returns the contents in json format.
@@ -130,6 +131,9 @@ class Frames:
             return self.previous_data
         else:
             return self.previous_data
+
+    async def get_data(self, **kwargs):
+        return await self.get_sf_data(**kwargs)
 
     def add_reverse_mapping(self, data, vtrigger=True, **kwargs):
         """
@@ -492,6 +496,39 @@ class Frames:
                 return self.add_custom_fields(data, text_output, embed_output)
             return text_output
 
+    async def autocomplete_char(self, name):
+        data = await self.get_data()
+        if not data:
+            return []
+
+        if not name:
+            return list(islice(data.keys(), 5))
+
+        return [
+            char
+            for (char, ratio) in process.extract(name, data.keys())
+            if ratio > self.char_ratio_thresh
+        ]
+
+    async def autocomplete_move(self, char_name, move_name):
+        data = await self.get_data()
+        if not data:
+            return []
+
+        try:
+            moves = data[char_name]["reverse_mapping"]
+        except KeyError:
+            return []
+
+        if not moves:
+            return list(islice(moves.keys(), 5))
+
+        return [
+            move
+            for (move, ratio) in process.extract(move_name, moves.keys())
+            if ratio > self.move_ratio_thresh
+        ]
+
 
 class GGFrames(Frames):
     def __init__(self, config):
@@ -516,9 +553,12 @@ class GGFrames(Frames):
         else:
             return self.previous_data
 
+    async def get_data(self):
+        await self.get_gg_data(vtrigger=False)
+
     async def slash_strive(self, char_name, move_name, *args, **kwargs):
         vtrigger = False
-        frame_data = await self.get_gg_data(vtrigger=False)
+        frame_data = await self.get_data()
         if not frame_data:
             return "Got an error when trying to get frame data :(."
         matched_value = self.match_move(char_name, move_name, vtrigger, frame_data)
