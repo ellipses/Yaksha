@@ -517,7 +517,8 @@ class Frames:
             return []
 
         try:
-            moves = data[char_name]["reverse_mapping"]
+            char_match, _ = process.extractOne(char_name, data.keys())
+            moves = data[char_match]["reverse_mapping"]
         except KeyError:
             return []
 
