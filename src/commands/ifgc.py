@@ -498,6 +498,7 @@ class Frames:
 
     async def autocomplete_char(self, name):
         data = await self.get_data()
+
         if not data:
             return []
 
@@ -554,7 +555,7 @@ class GGFrames(Frames):
             return self.previous_data
 
     async def get_data(self):
-        await self.get_gg_data(vtrigger=False)
+        return await self.get_gg_data(vtrigger=False)
 
     async def slash_strive(self, char_name, move_name, *args, **kwargs):
         vtrigger = False
