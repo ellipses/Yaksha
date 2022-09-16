@@ -114,7 +114,7 @@ async def char_autocomplete(
     current: str,
 ) -> List[app_commands.Choice[str]]:
     return populate_choices(
-        await client.tree_interface.autocomplete_char("sfv", current)
+        await client.tree_interface.autocomplete_char("sfv", interaction, current)
     )
 
 
@@ -129,7 +129,7 @@ async def move_autocomplete(
     else:
         return populate_choices(
             await client.tree_interface.autocomplete_move(
-                "sfv", interaction.namespace.char_name, current
+                "sfv", interaction, interaction.namespace.char_name, current
             )
         )
 
@@ -140,7 +140,7 @@ async def char_autocomplete(
     current: str,
 ) -> List[app_commands.Choice[str]]:
     return populate_choices(
-        await client.tree_interface.autocomplete_char("ggst", current)
+        await client.tree_interface.autocomplete_char("ggst", interaction, current)
     )
 
 
@@ -155,7 +155,7 @@ async def move_autocomplete(
     else:
         return populate_choices(
             await client.tree_interface.autocomplete_move(
-                "ggst", interaction.namespace.char_name, current
+                "ggst", interaction, interaction.namespace.char_name, current
             )
         )
 

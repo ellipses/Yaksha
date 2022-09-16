@@ -252,12 +252,13 @@ class Frames:
 
         # They might have supplied the move name in shortened format
         # so convert it to how the frame data dump expects.
-        result = re.search(self.short_regex, move)
-        if result:
-            matched = result.group(0)
-            # Slice to the second last char because the matched move might
-            # be 'cr. 'or 'cr ' but the  mapping only contains cr.
-            move = re.sub(self.short_regex, self.short_mapping[matched[:-1]], move)
+        if self.short_regex:
+            result = re.search(self.short_regex, move)
+            if result:
+                matched = result.group(0)
+                # Slice to the second last char because the matched move might
+                # be 'cr. 'or 'cr ' but the  mapping only contains cr.
+                move = re.sub(self.short_regex, self.short_mapping[matched[:-1]], move)
 
         # Use the reverse mapping to determine which move they
         # were looking for.
@@ -536,6 +537,7 @@ class GGFrames(Frames):
     def __init__(self, config):
         super().__init__(config)
         self.url = config["frame_data"]["ggst_url"]
+        self.short_regex = None
 
     @memoize(300)
     async def get_gg_data(self, **kwargs):

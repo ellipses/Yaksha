@@ -2,8 +2,53 @@
 import asyncio
 import discord
 import logging
+import libhoney
+from functools import wraps
 from commands import ifgc, actions
 import time
+
+
+def build_event(interaction, command, start_time):
+    ev = libhoney.Event(
+        data={
+            "guild_name": interaction.guild.name,
+            "guild_member_count": interaction.guild.member_count,
+            "command": command,
+            "response_time": time.time() - start_time,
+        }
+    )
+    return ev
+
+
+def monitor_slash_command(func):
+    @wraps(func)
+    async def func_wrapper(self, interaction, command, *args, **kwargs):
+        start_time = time.time()
+        result = await func(self, interaction, command, *args, **kwargs)
+        ev = build_event(interaction, command, start_time)
+        if len(args) == 2:
+            ev.add({"char_name": args[0], "move_name": args[1]})
+        return result
+
+    return func_wrapper
+
+
+def monitor_autocomplete(func):
+    @wraps(func)
+    async def func_wrapper(self, module_name, interaction, *args):
+        start_time = time.time()
+        ev = build_event(interaction, func.__name__, start_time)
+        ev.add({"module_name": module_name, "char_name": args[0]})
+        try:
+            ev.add({"move_name": args[1]})
+        except IndexError:
+            pass
+
+        result = await func(self, module_name, interaction, *args)
+        ev.send()
+        return result
+
+    return func_wrapper
 
 
 class TreeHandling:
@@ -21,6 +66,7 @@ class TreeHandling:
             "ggst": self.gg_module.slash_strive,
             "charming": actions_module.charming,
         }
+        libhoney.init(writekey=config["honeycomb"]["api_key"], dataset="yaksha")
 
     async def load(self):
         start_time = time.time()
@@ -29,16 +75,18 @@ class TreeHandling:
         print("Interface init time is")
         print(time.time() - start_time)
 
-    async def autocomplete_char(self, module_name, char_name):
+    @monitor_autocomplete
+    async def autocomplete_char(self, module_name, _, char_name):
         return await self.module_mapping[module_name].autocomplete_char(char_name)
 
-    async def autocomplete_move(self, module_name, char_name, move_name):
+    @monitor_autocomplete
+    async def autocomplete_move(self, module_name, _, char_name, move_name):
         return await self.module_mapping[module_name].autocomplete_move(
             char_name, move_name
         )
 
+    @monitor_slash_command
     async def handle_slash_command(self, interaction, command, *args, **kwargs):
-
         response = await self.command_mapping[command](*args, **kwargs)
         await self.send_message(interaction, response)
 
