@@ -3,6 +3,8 @@ discord:
   max_retries: 10
   application_id: ''
   debug_guild_id: ''
+honeycomb:
+  api_key: ''
 frame_data:
   url: ''
   ggst_url: ''
