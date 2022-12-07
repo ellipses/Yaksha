@@ -3,5 +3,5 @@ python-Levenshtein==0.12.1
 PyYAML==5.4
 requests==2.28.1
 libhoney==2.3.0
-urllib3==1.26.0
+urllib3==1.26.5
 # To install discord do pip install -U discord.py
