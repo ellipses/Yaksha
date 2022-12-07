@@ -7,18 +7,21 @@ from functools import wraps
 from commands import ifgc, actions
 import time
 
+CLIENT = None
+
 
 def build_event(interaction, command, start_time):
-    ev = libhoney.Event(
+    return libhoney.Event(
         data={
             "guild_name": interaction.guild.name,
             "guild_member_count": interaction.guild.member_count,
             "command": command,
             "response_time": time.time() - start_time,
+            "message_time": time.time() - interaction.created_at.timestamp(),
+            "user_response_time": time.time() - interaction.created_at.timestamp(),
+            "latency": CLIENT.latency,
         }
     )
-    return ev
-
 
 def monitor_slash_command(func):
     @wraps(func)
@@ -45,6 +48,7 @@ def monitor_autocomplete(func):
             pass
 
         result = await func(self, module_name, interaction, *args)
+
         ev.send()
         return result
 
@@ -56,19 +60,27 @@ class TreeHandling:
         self.client = client
         self.sf_module = ifgc.Frames(config)
         self.gg_module = ifgc.GGFrames(config)
+        self.sf6_module = ifgc.SF6Frames(config)
         actions_module = actions.Arbitary(config)
         self.module_mapping = {
             "sfv": self.sf_module,
             "ggst": self.gg_module,
+            "sf6": self.sf6_module,
         }
         self.command_mapping = {
             "sfv": self.sf_module.slash_sfv,
             "ggst": self.gg_module.slash_strive,
             "charming": actions_module.charming,
+            "sf6": self.sf6_module.slash_sf6,
         }
-        libhoney.init(writekey=config["honeycomb"]["api_key"], dataset="yaksha")
+        libhoney.init(
+            writekey=config["honeycomb"]["api_key"],
+            dataset=config["honeycomb"]["api_key"],
+        )
 
-    async def load(self):
+    async def load(self, client):
+        global CLIENT
+        CLIENT = client
         start_time = time.time()
         for _, module in self.module_mapping.items():
             await module.get_data()
@@ -76,13 +88,21 @@ class TreeHandling:
         print(time.time() - start_time)
 
     @monitor_autocomplete
-    async def autocomplete_char(self, module_name, _, char_name):
+    async def autocomplete_char(self, module_name, _interaction, char_name):
         return await self.module_mapping[module_name].autocomplete_char(char_name)
 
     @monitor_autocomplete
-    async def autocomplete_move(self, module_name, _, char_name, move_name):
+    async def autocomplete_move(self, module_name, _interaction, char_name, move_name):
         return await self.module_mapping[module_name].autocomplete_move(
             char_name, move_name
+        )
+
+    @monitor_autocomplete
+    async def autocomplete_char_state(
+        self, module_name, _interaction, char_name, state_name
+    ):
+        return await self.module_mapping[module_name].autocomplete_char_state(
+            char_name, state_name
         )
 
     @monitor_slash_command

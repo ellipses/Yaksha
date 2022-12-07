@@ -36,7 +36,7 @@ class MyClient(discord.Client):
         commands.
         """
         await self.wait_until_ready()
-        display_cmd = "/sfv | /ggst"
+        display_cmd = "/sfv | /ggst | /sf6"
         game = discord.Game(name=display_cmd)
         while not self.is_closed():
             try:
@@ -51,7 +51,7 @@ class MyClient(discord.Client):
 
     async def setup_hook(self):
         self.loop.create_task(self.update_playing_status())
-        self.loop.create_task(self.tree_interface.load())
+        self.loop.create_task(self.tree_interface.load(self))
         debug_guild_id = self.config["discord"].get("debug_guild_id")
         if debug_guild_id:
             debug_guild = discord.Object(id=debug_guild_id)
@@ -106,6 +106,67 @@ async def ggst(interaction: discord.Interaction, char_name: str, move_name: str)
     return await client.tree_interface.handle_slash_command(
         interaction, "ggst", char_name, move_name
     )
+
+
+@client.tree.command()
+@app_commands.describe(
+    char_name="The characters name",
+    move_name="The move name",
+    char_state="Optional char specific states like Installs.",
+)
+async def sf6(
+    interaction: discord.Interaction,
+    char_name: str,
+    move_name: str,
+    char_state: Optional[str],
+):
+    """Get SF6 frame data for the specific char and move.
+
+    Also works with stats of the char like fdash, bdash, throw range etc."""
+    return await client.tree_interface.handle_slash_command(
+        interaction, "sf6", char_name, move_name, char_state
+    )
+
+
+@sf6.autocomplete("char_state")
+async def char_state_autocomplete(
+    interaction: discord.Interaction,
+    current: str,
+) -> List[app_commands.Choice[str]]:
+    return populate_choices(
+        await client.tree_interface.autocomplete_char_state(
+            "sf6", interaction, interaction.namespace.char_name, current
+        )
+    )
+
+
+@sf6.autocomplete("char_name")
+async def char_autocomplete(
+    interaction: discord.Interaction,
+    current: str,
+) -> List[app_commands.Choice[str]]:
+    return populate_choices(
+        await client.tree_interface.autocomplete_char("sf6", interaction, current)
+    )
+
+
+@sf6.autocomplete("move_name")
+async def move_autocomplete(
+    interaction: discord.Interaction,
+    current: str,
+) -> List[app_commands.Choice[str]]:
+    if not interaction.namespace.char_name:
+        return populate_choices([])
+
+    else:
+        return populate_choices(
+            await client.tree_interface.autocomplete_move(
+                "sf6",
+                interaction,
+                interaction.namespace.char_name,
+                current,
+            )
+        )
 
 
 @sfv.autocomplete("char_name")

@@ -118,7 +118,7 @@ def get_callbacks():
     return _callbacks
 
 
-async def get_request(url, response_headers):
+async def get_request(url, response_headers=None):
     """
     Wrapper to handle get requests asyncronously.
     Returns the text if the status is 200, False
@@ -132,7 +132,7 @@ async def get_request(url, response_headers):
         }
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as resp:
-            logging.info("Request response is %s", resp.status)
+            logging.info("Request response for url %s, is %s", url, resp.status)
             if resp.status == 200:
                 return await resp.json(), resp.headers
             return False, resp.headers
