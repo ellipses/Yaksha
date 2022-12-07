@@ -5,9 +5,14 @@ discord:
   debug_guild_id: ''
 honeycomb:
   api_key: ''
+  data_set: ''
 frame_data:
-  url: ''
+  sf5_url: ''
+  sf5_detail_url: ''
   ggst_url: ''
+  ggst_detail_url: ''
+  sf6_url: ''
+  sf6_detail_url: ''
 stats:
   url: https://bots.discord.pw/api/bots/{bot_id}/stats
   token: 'some_other_token'
@@ -28,12 +33,16 @@ common_actions:
   'strive': >
     Get Guilty Gear Strive frame data for the char and move.
     Also works with stats of the char like fdash, bdash, throw etc.
-    Usage: ```!strive Sol 5p``` ```!strive sol throw```
+    Usage: ```/strive Sol 5p``` ```/strive sol throw```
   'sfv': >
     Get SFV frame data for the specified char and move. Also
     works with stats of the char like fdash, bdash, throw range etc.
     Use optional parameter -v for more info on the move.
-    Usage: ```!sfv Ryu cr.mk``` ```!sfv Nash phrase``` ```!sfv-v Ryu shoryu```
+    Usage: ```/sfv Ryu cr.mk``` ```/sfv Nash phrase``` ```/sfv Ryu shoryu```
+  'sf6': >
+    Get SF6 frame data for the specified char and move.
+    Also works with stats of the char like blah.
+    Usage: ```/sf6 Ryu cr.mk``` ```/sfv Guile phrase```
   'simpsons': >
     Get a simpsons gif that matches the specified caption.
     Usage```!simpsons nothing at all```.

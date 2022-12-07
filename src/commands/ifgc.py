@@ -12,7 +12,8 @@ from commands.utilities import memoize, get_request, register
 class Frames:
     def __init__(self, config=None):
         config = config or {}
-        self.url = config["frame_data"]["url"]
+        self.url = config["frame_data"]["sf5_url"]
+        self.detail_url = config["frame_data"]["sf5_detail_url"]
         self.info_regex = r"^-v"
         self.regex = r"(^\S*)\s*(vt1|vt2)?\s+(.+)"
         self.char_ratio_thresh = 65
@@ -107,6 +108,7 @@ class Frames:
         }
         self.request_headers = {}
         self.previous_data = None
+        self.special_states = {}
 
     def update_headers(self, headers):
         self.request_headers = {
@@ -114,8 +116,7 @@ class Frames:
             "Last-Modified": headers.get("Last-Modified"),
         }
 
-    @memoize(300)
-    async def get_sf_data(self, **kwargs):
+    async def _get_data(self, **kwargs):
         """
         Simple helper function that hits the frame data dump
         endpoint and returns the contents in json format.
@@ -126,16 +127,51 @@ class Frames:
         )
         if resp:
             self.update_headers(headers)
-            self.add_reverse_mapping(resp, **kwargs)
+            detail_resp = None
+            if self.detail_url:
+                detail_resp, _ = await get_request(self.detail_url)
+            self.add_reverse_mapping(resp, detail=detail_resp, **kwargs)
             self.previous_data = resp
             return self.previous_data
         else:
             return self.previous_data
 
+    @memoize(300)
+    async def get_sf_data(self, **kwargs):
+        return await self._get_data(**kwargs)
+
     async def get_data(self, **kwargs):
         return await self.get_sf_data(**kwargs)
 
-    def add_reverse_mapping(self, data, vtrigger=True, **kwargs):
+    def get_char_moves(self, char_states, specific_char_states, char, data):
+        char_moves = {}
+        # It's possible that the special status moves
+        # with the same name are lower cased.
+        # To avoid duplication, we
+        # enforce that all the moves are lower cased.
+        moves = list(data[char]["moves"]["normal"].keys())
+        for m in moves:
+            v = data[char]["moves"]["normal"][m]
+            char_moves[m.lower()] = v
+            data[char]["moves"]["normal"].pop(m)
+            data[char]["moves"]["normal"][m.lower()] = v
+
+        state_moves = {}
+        specific_states = []
+        if specific_char_states:
+            specific_states = specific_char_states.get(char, [])
+
+        for state in chain(char_states, specific_states):
+            s_moves = list(data[char]["moves"][state].keys())
+            for s_move in s_moves:
+                v = data[char]["moves"][state][s_move]
+                state_moves[s_move.lower()] = v
+                data[char]["moves"][state].pop(s_move)
+                data[char]["moves"][state][s_move.lower()] = v
+
+        return char_moves, state_moves, set(state_moves) - set(char_moves)
+
+    def add_reverse_mapping(self, data, detail=None, **kwargs):
         """
         Create a reverse mapping between common names,
         move command and the actual name of the moves.
@@ -145,8 +181,12 @@ class Frames:
         common_name_dict = {}
         numpad_dict = {}
         commands_dict = {}
-        v_triggers = ["vtTwo", "vtOne"]
+        char_states = detail["characterStates"]
+        specific_char_states = detail["specificCharacterStates"]
+        char_states.remove("normal")
 
+        self.special_states = specific_char_states if specific_char_states else {}
+        self.char_states = char_states
         # Handle chars with dots in their names by creating
         # a copy with the dots stripped out.
         update = []
@@ -158,29 +198,9 @@ class Frames:
 
         for char in data.keys():
 
-            char_moves = {}
-            # Its possible that the vtrigger moves even with the
-            # same name are lowercased. To avoid duplication, we
-            # enforce that all the moves are lower cased.
-            moves = list(data[char]["moves"]["normal"].keys())
-            for m in moves:
-                v = data[char]["moves"]["normal"][m]
-                char_moves[m.lower()] = v
-                data[char]["moves"]["normal"].pop(m)
-                data[char]["moves"]["normal"][m.lower()] = v
-
-            vt_only_moves = set()
-            vt_moves = {}
-            if vtrigger:
-                for v_trigger in v_triggers:
-                    v_moves = list(data[char]["moves"][v_trigger].keys())
-                    for vt_move in v_moves:
-                        v = data[char]["moves"][v_trigger][vt_move]
-                        vt_moves[vt_move.lower()] = v
-                        data[char]["moves"][v_trigger].pop(vt_move)
-                        data[char]["moves"][v_trigger][vt_move.lower()] = v
-
-                vt_only_moves = set(vt_moves) - set(char_moves)
+            char_moves, vt_moves, vt_only_moves = self.get_char_moves(
+                char_states, specific_char_states, char, data
+            )
 
             for move in chain(char_moves.keys(), vt_only_moves):
                 if move == "undefined":
@@ -232,13 +252,14 @@ class Frames:
                 stat: (value, "char_stat")
                 for stat, value in data[char]["stats"].items()
             }
+
             data[char]["reverse_mapping"].update(stats_mapping)
 
             common_name_dict = {}
             commands_dict = {}
             numpad_dict = {}
 
-    def match_move(self, char, move, vt, data):
+    def match_move(self, char, move, state, data):
         """
         Main helper function that handles matching the move.
         Uses the reverse mapping of the common name, input command
@@ -275,22 +296,33 @@ class Frames:
             return char_match, move_match, move
         else:
             # Find the move they want.
-            if vt:
+            if state:
                 # The move might not have any difference in vtrigger
                 # so just return the normal version.
                 try:
-                    move_data = data[char_match]["moves"][self.vt_mappings[vt]][move]
+                    move_data = data[char_match]["moves"][state][move]
                 except KeyError:
                     move_data = data[char_match]["moves"]["normal"][move]
             else:
                 try:
                     move_data = data[char_match]["moves"]["normal"][move]
-                # Might be a vtrigger only move.
+                # Might be a special status only move.
                 except KeyError:
-                    try:
-                        move_data = data[char_match]["moves"]["vtOne"][move]
-                    except KeyError:
-                        move_data = data[char_match]["moves"]["vtTwo"][move]
+                    if self.char_states:
+                        for state in self.char_states:
+                            try:
+                                move_data = data[char_match]["moves"][state][move]
+                                break
+                            except KeyError:
+                                pass
+
+                    elif self.special_states:
+                        for state in self.special_states[char_match]:
+                            try:
+                                move_data = data[char_match]["moves"][state][move]
+                                break
+                            except KeyError:
+                                pass
 
             return char_match, move, move_data
 
@@ -304,11 +336,13 @@ class Frames:
                     related_fields[field] = data[char]["stats"][field]
                 except KeyError:
                     pass
-
             output = "".join(
                 [" [%s] - %s" % (key, value) for key, value in related_fields.items()]
             )
-            output = "%s -" % char + output
+            if not related_fields:
+                output = self.stats_format % (char, move, move_data[0])
+            else:
+                output = "%s -" % char + output
 
         else:
             output = self.stats_format % (char, move, move_data[0])
@@ -482,6 +516,9 @@ class Frames:
         if not frame_data:
             return "Got an error when trying to get frame data :(."
 
+        if vt:
+            vt = self.vt_mappings[vt]
+
         matched_value = self.match_move(char_name, move_name, vt, frame_data)
         if not matched_value:
             return (
@@ -523,7 +560,7 @@ class Frames:
         except KeyError:
             return []
 
-        if not moves:
+        if not move_name:
             return list(islice(moves.keys(), 5))
 
         return [
@@ -532,33 +569,27 @@ class Frames:
             if ratio > self.move_ratio_thresh
         ]
 
+    async def autocomplete_char_state(self, char_name, _):
+        data = await self.get_data()
+        if not data:
+            return []
+
+        return self.special_states.get(char_name)
+
 
 class GGFrames(Frames):
     def __init__(self, config):
         super().__init__(config)
         self.url = config["frame_data"]["ggst_url"]
+        self.detail_url = config["frame_data"]["ggst_detail_url"]
         self.short_regex = None
 
     @memoize(300)
     async def get_gg_data(self, **kwargs):
-        """
-        Simple helper function that hits the frame data dump
-        endpoint and returns the contents in json format.
-        """
-        resp, headers = await get_request(
-            self.url,
-            self.request_headers,
-        )
-        if resp:
-            self.update_headers(headers)
-            self.add_reverse_mapping(resp, **kwargs)
-            self.previous_data = resp
-            return self.previous_data
-        else:
-            return self.previous_data
+        return await self._get_data(**kwargs)
 
     async def get_data(self):
-        return await self.get_gg_data(vtrigger=False)
+        return await self.get_gg_data()
 
     async def slash_strive(self, char_name, move_name, *args, **kwargs):
         vtrigger = False
@@ -579,6 +610,43 @@ class GGFrames(Frames):
             if "char_stat" not in data:
                 embed_output = self.format_embeded_message(
                     char, move, vtrigger, data, cmd_type="numCmd"
+                )
+                return self.add_custom_fields(data, text_output, embed_output)
+            return text_output
+
+
+class SF6Frames(Frames):
+    def __init__(self, config):
+        super().__init__(config)
+        self.url = config["frame_data"]["sf6_url"]
+        self.detail_url = config["frame_data"]["sf6_detail_url"]
+
+    @memoize(300)
+    async def get_sf6_data(self, **kwargs):
+        return await self._get_data(**kwargs)
+
+    async def get_data(self, **kwargs):
+        return await self.get_sf6_data()
+
+    async def slash_sf6(self, char_name, move_name, state, **kwargs):
+        frame_data = await self.get_data()
+        if not frame_data:
+            return "Got an error when trying to get frame data :(."
+
+        matched_value = self.match_move(char_name, move_name, state, frame_data)
+
+        if not matched_value:
+            return (
+                "%s with %s is not a valid " "character/move combination for SF6"
+            ) % (char_name, move_name)
+        else:
+            char, move, data = matched_value
+            text_output = self.format_output(
+                char, move, state, data, frame_data, move_name, cmd_type="numCmd"
+            )
+            if "char_stat" not in data:
+                embed_output = self.format_embeded_message(
+                    char, move, state, data, cmd_type="numCmd"
                 )
                 return self.add_custom_fields(data, text_output, embed_output)
             return text_output
