@@ -2,9 +2,10 @@
 import re
 import json
 import discord
+import logging
 from itertools import chain
 from itertools import islice
-from fuzzywuzzy import process, fuzz
+from fuzzywuzzy import process
 from collections import OrderedDict
 from commands.utilities import memoize, get_request, register
 
@@ -12,6 +13,7 @@ from commands.utilities import memoize, get_request, register
 class Frames:
     def __init__(self, config=None):
         config = config or {}
+        self.embed_footer_length = 2000
         self.url = config["frame_data"]["sf5_url"]
         self.detail_url = config["frame_data"]["sf5_detail_url"]
         self.info_regex = r"^-v"
@@ -162,7 +164,13 @@ class Frames:
             specific_states = specific_char_states.get(char, [])
 
         for state in chain(char_states, specific_states):
-            s_moves = list(data[char]["moves"][state].keys())
+            try:
+                s_moves = list(data[char]["moves"][state].keys())
+            except KeyError:
+                logging.exception(
+                    "failed to build specific state info for %s-%s", char, state
+                )
+                continue
             for s_move in s_moves:
                 v = data[char]["moves"][state][s_move]
                 state_moves[s_move.lower()] = v
@@ -425,10 +433,13 @@ class Frames:
                 )
 
         if "extraInfo" in data:
-            # Maybe they messed up the encoding so attemtpt to handle it.
+            # Maybe they messed up the encoding so attempt to handle it.
             if type(data["extraInfo"]) == str:
                 data["extraInfo"] = json.loads(data["extraInfo"])
-            em.set_footer(text=", ".join(data["extraInfo"]))
+            presented_info = ", ".join(data["extraInfo"])
+            if len(presented_info) > self.embed_footer_length:
+                presented_info = presented_info[:self.embed_footer_length] + " ..."
+            em.set_footer(text=presented_info)
         return em
 
     def add_custom_fields(self, data, text_output, embed_output):
